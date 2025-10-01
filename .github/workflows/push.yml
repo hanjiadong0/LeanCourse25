@@ -3,11 +3,16 @@ on:
     branches:
       - master
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# Cancel previous runs if a new commit is pushed to the same PR or branch
+concurrency:
+  group: ${{ github.ref }}  # Group runs by the ref (branch or PR)
+  cancel-in-progress: true  # Cancel any ongoing runs in the same group
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages and modify PR labels
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: read          # Read access to repository contents
+  pages: write            # Write access to GitHub Pages
+  id-token: write         # Write access to ID tokens
 
 jobs:
   build_project:
@@ -15,72 +20,25 @@ jobs:
     name: Build project
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Fetch all history for all branches and tags
 
-      - name: Install elan
-        run: curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+      - name: Install and configure Lean, and get mathlib cache
+        uses: leanprover/lean-action@434f25c2f80ded67bba02502ad3a86f25db50709 # v1.3.0
+        with:
+          auto-config: false
+          use-github-cache: false
+          use-mathlib-cache: true
 
-      - name: Get cache
-        run: ~/.elan/bin/lake -Kenv=dev exe cache get || true
+      - name: "Check that Project.lean is up to date"
+        run: |
+          ~/.elan/bin/lake exe mk_all --check || echo "ERROR: please ensure that Project.lean is up to date, for instance by running lake exe mk_all"
 
       - name: Build project
-        run: ~/.elan/bin/lake -Kenv=dev build LeanCourse
+        run: ~/.elan/bin/lake build Project
 
-      - name: Cache mathlib documentation
-        uses: actions/cache@v4
+      - uses: leanprover-community/docgen-action@b210116d3e6096c0c7146f7a96a6d56b6884fef5 # 2025-06-12
         with:
-          path: |
-            .lake/build/doc/Init
-            .lake/build/doc/Lake
-            .lake/build/doc/Lean
-            .lake/build/doc/Std
-            .lake/build/doc/Mathlib
-            .lake/build/doc/declarations
-            .lake/build/doc/find
-            .lake/build/doc/*.*
-            !.lake/build/doc/declarations/declaration-data-LeanCourse*
-          key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
-          restore-keys: MathlibDoc-
-
-      - name: Build project documentation
-        run: ~/.elan/bin/lake -Kenv=dev build LeanCourse:docs
-
-      - name: Copy documentation to `docs/docs`
-        run: |
-          sudo chown -R runner docs
-          cp -r .lake/build/doc docs/docs
-
-      - name: Remove lake files from documentation in `docs/docs`
-        run: |
-          find docs/docs -name "*.trace" -delete
-          find docs/docs -name "*.hash" -delete
-
-      - name: Bundle dependencies
-        uses: ruby/setup-ruby@v1
-        with:
-          working-directory: docs
-          ruby-version: "3.0"
-          bundler-cache: true
-
-      - name: Bundle website
-        working-directory: docs
-        run: JEKYLL_ENV=production bundle exec jekyll build
-
-      # - name: Upload docs to `docs/`
-      #   uses: actions/upload-pages-artifact@v3
-      #   with:
-      #     path: docs/
-
-      - name: Upload docs & blueprint artifact to `docs/_site`
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: docs/_site
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      # - name: Make sure the cache works
-      #   run: mv docs/docs .lake/build/doc
+          blueprint: true
+          homepage: docs

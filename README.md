@@ -70,7 +70,7 @@ You can temporarily play with Lean using GitHub codespaces. This requires a GitH
 
 ### Using Ona
 
-Ona (formerly Gitpod) is an alternative to codespaces that is slightly inconvenient, since it requires you to verify your phone number.
+Ona (formerly Gitpod) is an alternative to codespaces that is a bit inconvenient, since it requires you to verify your phone number.
 
 Click this button to get started:
 
