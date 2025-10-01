@@ -31,12 +31,12 @@ jobs:
           use-github-cache: false
           use-mathlib-cache: true
 
-      - name: "Check that Project.lean is up to date"
+      - name: "Check that LeanCourse25.lean is up to date"
         run: |
-          ~/.elan/bin/lake exe mk_all --check || echo "ERROR: please ensure that Project.lean is up to date, for instance by running lake exe mk_all"
+          ~/.elan/bin/lake exe mk_all --check || echo "ERROR: please ensure that LeanCourse25.lean is up to date, for instance by running lake exe mk_all"
 
       - name: Build project
-        run: ~/.elan/bin/lake build Project
+        run: ~/.elan/bin/lake build LeanCourse25
 
       - uses: leanprover-community/docgen-action@b210116d3e6096c0c7146f7a96a6d56b6884fef5 # 2025-06-12
         with:
