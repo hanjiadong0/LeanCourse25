@@ -92,6 +92,11 @@ The workspace should also stop automatically
 
 <!-- To restart a previous workspace, go to [https://gitpod.io/workspaces/](https://gitpod.io/workspaces/). -->
 
+### Live Browser version
+
+You can run a single Lean online in the [Live editor](https://live.lean-lang.org/#project=mathlib-stable). If you haven't managed to install Lean yet, you can use this to work on a single file (e.g. an exercise file) by copy-pasting the contents in the online editor.
+
+Warning: this could lead to subtle errors, because the live editor might use a slightly different version of Lean and Mathlib.
 
 ## Links
 
