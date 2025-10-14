@@ -24,20 +24,15 @@ jobs:
         with:
           fetch-depth: 0 # Fetch all history for all branches and tags
 
-      - name: Install and configure Lean, and get mathlib cache
+      - name: Build Lean
         uses: leanprover/lean-action@434f25c2f80ded67bba02502ad3a86f25db50709 # v1.3.0
         with:
           auto-config: false
           use-github-cache: false
           use-mathlib-cache: true
+          build: true
 
-      - name: "Check that LeanCourse25.lean is up to date"
-        run: |
-          ~/.elan/bin/lake exe mk_all --check || echo "ERROR: please ensure that LeanCourse25.lean is up to date, for instance by running lake exe mk_all"
-
-      - name: Build project
-        run: ~/.elan/bin/lake build LeanCourse25
-
-      - uses: leanprover-community/docgen-action@b210116d3e6096c0c7146f7a96a6d56b6884fef5 # 2025-06-12
+      - name: Build Documentation
+        uses: leanprover-community/docgen-action@b210116d3e6096c0c7146f7a96a6d56b6884fef5 # 2025-06-12
         with:
           homepage: docs
