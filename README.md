@@ -20,7 +20,7 @@ You will find the Lean files in the `LeanCourse25` directory:
 
 * When you have downloaded the repository a message appears allowing you to open the project folder.
 To test that everything is working, open the repository and open the file `LeanCourse25/Test.lean`.
-The file should be ready a few seconds later. If you see a blue squiggle under `#eval`, Lean is running correctly.
+The file should be ready after loading a while. If you see a blue squiggle under `#eval`, Lean is running correctly.
 
 * A useful (but optional) extension is the VSCode extension `Error Lens`. If you install this, you will see messages from Lean right in the file where you're typing.
 
@@ -34,6 +34,8 @@ You can still run Lean in your browser by using Codespaces or Gitpod, see the th
 * On Windows, antivirus programs can cause slowdowns or errors when downloading a Lean project. Consider temporarily disabling your antivirus program in the step *Complete the extension setup*
 
 * If you get errors such as `curl: (35) schannel` or `uncaught exception: no such file or directory (error code: 2)` take a look [here](https://leanprover-community.github.io/install/project.html#troubleshooting).
+
+* Unfortunately, the installation step, and loading Lean for the first time is very slow on Windows computers. Once Lean has finished starting up, it should be quick and responsive.
 
 ## Update repository
 
