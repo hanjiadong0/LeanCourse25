@@ -16,7 +16,8 @@ open scoped Nat
   https://github.com/fpvandoorn/LeanCourse25
 * Follow the instruction on that page
   to install Lean and download the repository.
-* Do this at home, and ask for help during the tutorial on Monday if you get stuck.
+* Do this at home, and ask for help during
+  the tutorial on Monday if you get stuck.
 * Link to Mathematics in Lean for background reading:
   https://leanprover-community.github.io/mathematics_in_lean/
 * You can use the `∀` symbol at the top middle (or right)
@@ -61,19 +62,15 @@ example (f : ℝ → ℝ) (u : ℕ → ℝ) (x₀ : ℝ)
     SequenceHasLimit (f ∘ u) (f x₀) := by
   unfold SequenceHasLimit
   intro (ε : ℝ) (hε : ε > 0)
-  obtain ⟨δ : ℝ, hδ : δ > 0, h2f : ∀ x, |x - x₀| < δ → |f x - f x₀| < ε⟩ := hf ε hε
+  obtain ⟨δ : ℝ, hδ : δ > 0,
+    h2f : ∀ x, |x - x₀| < δ → |f x - f x₀| < ε⟩ := hf ε hε
   obtain ⟨N : ℕ, hN : ∀ n ≥ N, |u n - x₀| < δ⟩ := hu δ hδ
   use N
   intro (n : ℕ) (hn : n ≥ N)
   have : |u n - x₀| < δ := hN n hn
   have : |f (u n) - f x₀| < ε := h2f (u n) this
   assumption
-
-
-
-
-
-
+  done
 
 
 
@@ -84,7 +81,7 @@ example (f : ℝ → ℝ) (u : ℕ → ℝ) (x₀ : ℝ)
 /-!
 # How does Lean help you?
 
-* Requires details
+* Requires you to write a detailed proof
 * Displays tactic state
   "the current game board of a mathematical proof"
 * Keep a proof organized
@@ -104,6 +101,12 @@ example (f : ℝ → ℝ) (u : ℕ → ℝ) (x₀ : ℝ)
 
 #eval 2 ^ 3 + 4 * 5 - 6
 
+
+
+
+
+
+
 -- compute the sum `0 ^ 2 + 1 ^ 2 + ⋯ + 100 ^ 2`
 #eval do
   let mut sum := 0
@@ -112,9 +115,13 @@ example (f : ℝ → ℝ) (u : ℕ → ℝ) (x₀ : ℝ)
     sum := sum + j ^ 2
   return sum
 
+
 -- compute the sum `0 + 1 + ⋯ + 100` again
 -- `Finset.range 101 = {0, 1, ..., 100}`
 #eval ∑ j ∈ Finset.range 101, j ^ 2
+
+
+
 
 
 
@@ -137,17 +144,26 @@ Note the colon that means "has type" or "having type".
 #check fun n : ℤ ↦ n^2
 
 
+
+
+
 /- We can write our own definitions.
+Here we define the sequence consisting
+of the square roots of natural numbers
+
 Definitions involving `ℝ` are not *computable*. -/
-noncomputable def u : ℕ → ℝ := fun n ↦ 1/n
+noncomputable def u : ℕ → ℝ := fun n ↦ √n
+
+
+
 
 
 /-
 The most basic protection against error is type checking: mathematical objects
 must be combined according to their type.
 
-`u` has type `ℕ → ℝ`, hence it expects natural numbers as inputs, and produces
-real numbers as outputs.
+`u` has type `ℕ → ℝ`, hence it expects natural numbers
+as inputs, and produces real numbers as outputs.
 
 Hence `u 1` is ok and has type `ℝ`.
 -/
@@ -157,12 +173,18 @@ Hence `u 1` is ok and has type `ℝ`.
 #check (u 1) + 2
 #check u (1 + 2)
 
+
+
 /-
 But `u π` is not ok, we say it doesn't type-check.
 -/
 
 -- #check u π
 -- #check u u
+
+
+
+
 
 
 /- The type `Prop` contains all statements
@@ -175,12 +197,9 @@ Unfortunate clash in terminology:
 -/
 
 
-
-
-
-
 #check 2 + 2 = 4
 #check 3 < π
+
 
 
 
@@ -206,17 +225,26 @@ def Statement3 : Prop :=
 
 /- Nat.Prime is a predicate on natural numbers, so it has type `ℕ → Prop`. -/
 
-#check (Nat.Prime)
+#check Nat.Prime
+
+
 
 /- What is the type of the factorial function? -/
 -- #check (Nat.factorial)
 -- #check fun n ↦ n !
 
-/- What is the type of the predicate stating that a natural number is at least 2? -/
+
+
+/- What is the type of the predicate
+stating that a natural number is at least 2? -/
 -- #check (Nat.AtLeastTwo)
+
+
 
 /- What is the type of addition on the natural numbers? -/
 -- #check fun n m : ℕ ↦ n + m
+
+
 
 /- What is the type of `≤` on the integers? -/
 -- #check fun n m : ℤ ↦ n ≤ m

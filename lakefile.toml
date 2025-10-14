@@ -8,6 +8,7 @@ pp.unicode.fun = true # pretty-prints `fun a ↦ b`
 autoImplicit = false
 relaxedAutoImplicit = false
 weak.linter.style.longLine = true
+weak.linter.unusedTactic = false
 maxSynthPendingDepth = 3
 
 [[require]]
