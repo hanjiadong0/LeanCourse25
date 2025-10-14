@@ -16,7 +16,7 @@ You will find the Lean files in the `LeanCourse25` directory:
 
 * This will guide you to install VSCode (a text editor which supports Lean) and Lean.
 
-* As part of the **extension setup**, in the step **Set up Lean 4 project** click on **Download an existing project**, choose `Git repository URL`, enter `https://github.com/fpvandoorn/LeanCourse25` and then select a folder where you want to download this repository, and specify a folder name. This will download Mathlib, which will take a few minutes.
+* As part of the **extension setup**, in the step **Set up Lean 4 project** click on **Download an existing project**, if prompted choose `Git repository URL`, and enter `https://github.com/fpvandoorn/LeanCourse25` as the URL. Then navigate to the directory where you want to download this repository, and specify a folder name. It will create a new directory with that name for you. This will download Mathlib, which will take a few minutes.
 
 * When you have downloaded the repository a message appears allowing you to open the project folder.
 To test that everything is working, open the repository and open the file `LeanCourse25/Test.lean`.
