@@ -168,6 +168,7 @@ of the square roots of natural numbers
 Definitions involving `ℝ` are not *computable*. -/
 noncomputable def u : ℕ → ℝ := fun n ↦ √n
 
+/- END OF LECTURE -/
 
 
 
