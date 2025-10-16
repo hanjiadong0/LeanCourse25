@@ -35,6 +35,8 @@ You can still run Lean in your browser by using Codespaces or Gitpod, see the th
 
 * If you get errors such as `curl: (35) schannel` or `uncaught exception: no such file or directory (error code: 2)` take a look [here](https://leanprover-community.github.io/install/project.html#troubleshooting).
 
+* If after installing the extension, you see 5 steps, but nothing else: please close all side panels (and possibly decrease the font size). For some reason the second (important) column is hidden if there is not enough room.
+
 * Unfortunately, the installation step, and loading Lean for the first time is very slow on Windows computers. Once Lean has finished starting up, it should be quick and responsive.
 
 ## Update repository
