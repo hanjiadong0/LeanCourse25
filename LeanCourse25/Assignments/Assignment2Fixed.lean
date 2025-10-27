@@ -15,38 +15,70 @@ open Real Function Set Nat
 /-! # Exercises to practice. -/
 
 example (p q r s : Prop) (h : p ∧ q → r) (hp : p) (h' : q → s) : q → r ∧ s := by
-  sorry
+  intro hq
+  constructor
+  · exact h ⟨hp, hq⟩
+  · exact h' hq
   done
 
 example {α : Type*} {p q : α → Prop} (h : ∀ x, p x → q x) :
     (∃ x, p x) → (∃ x, q x) := by
-  sorry
+  intro hx
+  obtain ⟨x, hpx⟩ := hx
+  use x
+  apply h x hpx
   done
 
 -- Exercise: prove this by contraposition.
 example : 2 ≠ 4 → 1 ≠ 2 := by
-  sorry
-  done
+  contrapose!
+  simp!
 
 /- Prove the following with basic tactics,
 in particular without using `tauto`, `grind` or lemmas from Mathlib. -/
 example {α : Type*} {p : α → Prop} {r : Prop} :
     ((∃ x, p x) → r) ↔ (∀ x, p x → r) := by
-  sorry
+  constructor
+  · intro h x hx
+    apply h ⟨x, hx⟩
+  · intro h hx
+    obtain ⟨x, hx'⟩:= hx
+    apply h x hx'
   done
 
 /- Prove the following with basic tactics,
 in particular without using `tauto`, `grind` or lemmas from Mathlib. -/
 example {α : Type*} {p : α → Prop} {r : Prop} :
     (∃ x, p x ∧ r) ↔ ((∃ x, p x) ∧ r) := by
-  sorry
+  constructor
+  · intro h
+    obtain ⟨x, hx, hr⟩ := h
+    exact ⟨ ⟨x, hx⟩, hr⟩
+  · intro h'
+    obtain ⟨ hx, hr⟩ := h'
+    obtain ⟨x, hp ⟩ := hx
+    exact ⟨x, hp, hr⟩
   done
 
 /- Prove the following without using `push_neg` or lemmas from Mathlib.
 You will need to use `by_contra` in the proof. -/
 example {α : Type*} (p : α → Prop) : (∃ x, p x) ↔ (¬ ∀ x, ¬ p x) := by
-  sorry
-  done
+  constructor
+  · intro hx
+    obtain ⟨x,hp⟩ := hx  -- hx : ∃ x, p x  → pick witness x with hp : p x
+    intro hx'  -- hx' : ∀ x, ¬ p x
+    specialize hx' x  -- specialize to this witness
+    contradiction
+
+  · intro h
+    by_contra hpx -- ¬ ∃ x, p x
+     -- From ¬∃x, p x, build ∀x, ¬p x
+    have hpx': ∀x, ¬p x := by
+      intro x hx
+      exact hpx ⟨x, hx⟩
+    exact h hpx'   -- contradicts h : ¬ ∀ x, ¬ p x
+
+
 
 def SequentialLimit (u : ℕ → ℝ) (l : ℝ) : Prop :=
   ∀ ε > 0, ∃ N, ∀ n ≥ N, |u n - l| < ε
@@ -79,7 +111,7 @@ example {G : Type*} [Group G] {a b c d : G}
 /-- Prove the following using `linarith`.
 Note that `linarith` cannot deal with implication or if and only if statements. -/
 example (a b c : ℝ) : a + b ≤ c ↔ a ≤ c - b := by
-  sorry
+  linarith
   done
 
 

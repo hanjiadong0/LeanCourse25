@@ -294,9 +294,18 @@ Also try it directly with `rw`.
 
 example (a b c : ℝ) (h : a = b - c) (h2 : b * b = 2 * c) :
     a * b = (2 - b) * c := by
-  sorry
-  done
+  calc
+      a * b = (b-c) * b := by rw [h]
+      _     = b*b -c*b  := by ring
+      _     = 2*c - c*b := by rw [h2]
+      _     = (2 - b) * c := by ring
 
+example (a b c : ℝ) (h : a = b - c) (h2 : b * b = 2 * c) :
+  a * b = (2 - b) * c := by
+  rw [h]        -- replace a with (b - c)
+  rw [sub_mul]  -- simplify: (b - c) * b → b*b - c*b
+  rw [h2]       -- replace b*b with 2*c
+  ring_nf       -- simplify: 2*c - c*b → (2 - b)*c
 
 
 /-
@@ -412,7 +421,11 @@ variable (f g : ℝ → ℝ)
 #check (continuous_sin : Continuous (fun x : ℝ ↦ sin x))
 
 example : Continuous (fun x ↦ x + x * Real.sin x) := by
-  sorry
+  apply Continuous.add       -- need both parts continuous
+  ·apply continuous_id        -- part 1: x ↦ x
+  apply Continuous.mul       -- part 2: x ↦ x * sin x
+  ··apply continuous_id        -- factor 1: x ↦ x
+  ··apply continuous_sin       -- factor 2: x ↦ sin x
   done
 
 
@@ -437,20 +450,24 @@ example : Continuous (fun x ↦ x + x * Real.sin x) := by
 
 
 example (h : a ≤ b) : exp a ≤ exp b := by
-  sorry
+  apply exp_le_exp.2
+  exact h 
   done
 
 
 
 example (h : exp a ≤ exp b) : a ≤ b := by
-  sorry
+  apply exp_le_exp.1
+  assumption 
   done
 
 
 
 
 example {p q : Prop} (h1 : p → q) (h2 : q → p) : p ↔ q := by
-  sorry
+  constructor
+  · apply h1
+  · apply h2
   done
 
 
