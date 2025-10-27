@@ -111,6 +111,10 @@ example {G : Type*} [Group G] {a b c d : G}
 /-- Prove the following using `linarith`.
 Note that `linarith` cannot deal with implication or if and only if statements. -/
 example (a b c : ℝ) : a + b ≤ c ↔ a ≤ c - b := by
+  constructor
+  intro h1
+  linarith
+  intro h2
   linarith
   done
 
