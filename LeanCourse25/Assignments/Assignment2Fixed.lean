@@ -83,9 +83,15 @@ example {α : Type*} (p : α → Prop) : (∃ x, p x) ↔ (¬ ∀ x, ¬ p x) := 
 def SequentialLimit (u : ℕ → ℝ) (l : ℝ) : Prop :=
   ∀ ε > 0, ∃ N, ∀ n ≥ N, |u n - l| < ε
 
+set_option linter.unusedVariables false
+
 example (a : ℝ) : SequentialLimit (fun n : ℕ ↦ a) a := by
-  sorry
-  done
+  unfold SequentialLimit
+  intro ε hε
+  use 0
+  intro n hn
+  simp
+  linarith
 
 /-
 `(n)!` denotes the factorial function on the natural numbers.
@@ -93,20 +99,33 @@ The parentheses are mandatory when writing.
 Use `calc` to prove this.
 You can use `exact?` to find lemmas from the library,
 such as the fact that factorial is monotone. -/
-example (n m k : ℕ) (h : n ≤ m) : (n)! ∣ (m + 1)! := by
-  sorry
-  done
+example (n m  : ℕ) (h : n ≤ m) : (n)! ∣ (m + 1)! := by
+calc
+  (n)! ∣ (m)! := by solve_by_elim [Nat.factorial_dvd_factorial]
+  _ ∣ (m+1)! := by
+       -- first, produce `m! ∣ (m+1)!`
+      have hm : (m)!∣ (m+1)! :=by
+        -- (m+1)! = (m+1) * m!
+        simp [Nat.factorial_succ, Nat.mul_comm]
+      -- now `solve_by_elim` can use `hm`
+      solve_by_elim
 
 example (a b c x y : ℝ) (h : a ≤ b) (h2 : b < c) (h3 : x ≤ y) :
     a + exp x ≤ c + exp (y + 2) := by
-  sorry
-  done
+calc
+  a + exp x ≤ b + exp x := by gcongr        -- use a ≤ b
+  _         ≤ c + exp x := by gcongr        -- use b < c
+  _         ≤ c + exp y := by gcongr        -- use x ≤ y
+  _         ≤ c + exp (y+2):= by
+    have hy: y ≤ y+2 := by linarith
+    gcongr  -- y ≤ y+2 ⇒ exp y ≤ exp (y+2)
+
 
 -- Use `rw?` or `rw??` to help you in the following calculation.
 -- Alternatively, write out a calc block by hand.
 example {G : Type*} [Group G] {a b c d : G}
     (h : a⁻¹ * b * c * c⁻¹ * a * b⁻¹ * a * a⁻¹ = b) (h' : b * c = c * b) : b = 1 := by
-  sorry
+  rw?
 
 /-- Prove the following using `linarith`.
 Note that `linarith` cannot deal with implication or if and only if statements. -/
