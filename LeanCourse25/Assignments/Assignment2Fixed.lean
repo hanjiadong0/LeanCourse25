@@ -167,14 +167,18 @@ example {a₁ a₂ b₁ b₂ c₁ c₂ : ℝ} (hab : a₁ + a₂ = b₁ + b₂) 
 
 
 example {m n : ℤ} : n - m ^ 2 ≤ n + 3 := by
-  sorry
-  done
+have  h: 0 ≤  m ^ 2:= by exact sq_nonneg m
+calc
+  n - m ^ 2 ≤ n + 0 := by linarith
+  _        ≤ n + 3 := by linarith
+
 
 example {a : ℝ} (h : ∀ b : ℝ, a ≥ -3 + 4 * b - b ^ 2) : a ≥ 1 := by
-  sorry
-  done
-
-
+  -- Work pointwise in an arbitrary b, then conclude.
+  have h2:= h 2
+  calc
+   a ≥ -3 + 4 * 2 - 2 ^ 2 := by exact h2
+   _ ≥ 1 := by linarith
 
 /-! # Exercises to hand-in. -/
 
