@@ -1,6 +1,7 @@
 import Mathlib.Analysis.Complex.Exponential
 import Mathlib.FieldTheory.Finite.Basic
-
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Algebra.Order.Group.Abs
 open Real Function Set Nat
 
 /-
@@ -352,7 +353,7 @@ example (p : ℕ) [Fact (Nat.Prime p)] (k : ZMod p) : k ^ (5 * (p - 1) + 1) = k 
       k ^ (5 * (p - 1) + 1)
               = k ^ (5 * (p - 1)) * k := by
                 -- (n+1)-th power
-                ring_nf
+                ring
         _   = (k ^ (p - 1)) ^ 5 * k := by
                 -- 5*(p-1) = (p-1)*5 and pow_mul
                 ring
@@ -361,25 +362,97 @@ example (p : ℕ) [Fact (Nat.Prime p)] (k : ZMod p) : k ^ (5 * (p - 1) + 1) = k 
   done
 end Functions
 
+#check (abs_add_le: ∀ a b : ℝ, |a + b| ≤ |a| + |b|)
 
 /- Prove that the sum of two converging sequences converges. -/
 lemma sequentialLimit_add {s t : ℕ → ℝ} {a b : ℝ}
       (hs : SequentialLimit s a) (ht : SequentialLimit t b) :
     SequentialLimit (fun n ↦ s n + t n) (a + b) := by
-  sorry
-  done
+    -- Unfold the definition and do an ε/2 argument.
+  unfold SequentialLimit at hs ht ⊢
+  intro ε hε
+  have hε2: 0 < ε / 2 := by linarith
+  -- get indices for ε/2 for each sequence
+  obtain ⟨ Ns, hNs ⟩ := hs (ε / 2) hε2
+  obtain ⟨ Nt, hNt ⟩ := ht (ε / 2) hε2
+  refine ⟨ max Ns Nt,?_ ⟩
+  intro n hn
+-- hn : max Ns Nt ≤ n
+  have ⟨hn1, hn2⟩ := (max_le_iff.mp hn)
+-- now hn1 : Ns ≤ n, hn2 : Nt ≤ n
+  have hslt : |s n - a| < ε / 2 := hNs n hn1
+  have htlt : |t n - b| < ε / 2 := hNt n hn2
+  -- apply the triangle inequality
+  calc
+    |(s n + t n) - (a + b)|
+      = |(s n - a) + (t n - b)| := by ring_nf
+    _ ≤ |s n - a| + |t n - b|   := by apply abs_add_le (s n - a) (t n - b)
+    _ < ε / 2 + ε / 2           := add_lt_add hslt htlt
+    _ = ε                       := by ring
 
 /- It may be useful to case split on whether `c = 0` is true. -/
 lemma sequentialLimit_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ) (hs : SequentialLimit s a) :
     SequentialLimit (fun n ↦ c * s n) (c * a) := by
-  sorry
+  by_cases hc : c = 0
+  · -- trivial constant case
+    subst hc
+    unfold SequentialLimit at hs ⊢
+    intro ε hε
+    exact ⟨0, by
+      intro n hn
+      -- |0 * s n - 0 * a| = 0 < ε
+      simpa [zero_mul] using hε⟩
+  · -- scale ε by |c|
+    have hc_pos : 0 < |c| := abs_pos.mpr hc
+    unfold SequentialLimit at hs ⊢
+    intro ε hε
+    have hε' : 0 < ε / |c| := by exact div_pos hε hc_pos
+    obtain ⟨N, hN⟩ := hs (ε / |c|) hε'
+    refine ⟨N, ?_⟩
+    intro n hn
+    have hsn : |s n - a| < ε / |c| := hN n hn
+    calc
+      |c * s n - c * a|
+          = |c * (s n - a)| := by ring_nf
+      _   = |c| * |s n - a| := by rw [@abs_mul]
+      _   < |c| * (ε / |c|) := by exact mul_lt_mul_of_pos_left hsn hc_pos
+      _   = ε := by
+        have h' : |c| ≠ 0 := abs_ne_zero.mpr hc
+        -- |c| * (ε / |c|) = ε
+        simpa [one_div, mul_comm, mul_left_comm, mul_assoc]
+          using (by
+            calc
+              |c| * (ε / |c|)
+                  = (|c| * ε) * (1 / |c|) := by ring
+              _ = ε * (|c| * (1 / |c|)) := by ring
+              _ = ε * 1 := by
+                   rw [mul_one_div_cancel h']
+              _ = ε := by simp)
   done
+
+
 
 /-- Prove this using a calculation. -/
-lemma exercise_square {m n k : ℤ} (h : m ^ 2 + n ≤ 2) : n + 1 ≤ 3 + k ^ 2 := by
-  sorry
-  done
-
+lemma exercise_square {m n k : ℤ} (h : m ^ 2 + n ≤ 2) :
+    n + 1 ≤ 3 + k ^ 2 := by
+    -- From h, isolate n
+  have hn : n ≤ 2 - m ^ 2 := by
+    linarith
+  -- Squares are nonnegative over ℤ
+  have hsq : 0 ≤ m ^ 2 := by exact sq_nonneg (m : ℤ)
+  -- Hence 2 - m^2 ≤ 2, so n ≤ 2
+  have hn2 : n ≤ 2 := by
+    have : 2 - m ^ 2 ≤ 2 := by linarith [hsq]
+    apply le_trans hn this
+  -- Also k^2 ≥ 0, so 3 ≤ 3 + k^2
+  have hk0 : 0 ≤ k ^ 2 := by exact sq_nonneg (k : ℤ)
+  have h3 : 3 ≤ 3 + k ^ 2 := by
+    simpa using add_le_add_left hk0 3
+  -- Chain the inequalities
+  calc
+    n + 1 ≤ 2 + 1 := add_le_add_right hn2 1
+    _ = 3 := by norm_num
+    _ ≤ 3 + k ^ 2 := h3
 
 section Growth
 
