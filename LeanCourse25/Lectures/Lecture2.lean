@@ -355,7 +355,7 @@ example (p q r : Prop) (hq : p → q) (hr : p → q → r) : p → r := by
 
 /- We can also use `specialize` to apply a hypothesis to arguments. -/
 example (p q : Prop) (a b c : ℝ) (hq : p → q) (hr : p → q → a = b) : p → a + c = b + c := by
-  intro hp
+  intro hp  
   specialize hq hp
   specialize hr hp hq
   rw [hr]
@@ -385,6 +385,10 @@ example (p q r s : Prop) (hq : p → s → q) (hr : q → r) : s → p → r := 
   · exact hp
   · assumption
   done
+
+
+
+
 
 example (p q r s : Prop) (hq : (p → s) → q) (hr : q → r) : s → p → r := by
   intro hs hp
@@ -442,6 +446,7 @@ example : Continuous (fun x ↦ x + x * Real.sin x) := by
 -/
 
 
+
 #check exp_le_exp
 #check (exp_le_exp.1 : exp a ≤ exp b → a ≤ b)
 #check (exp_le_exp.2 : a ≤ b → exp a ≤ exp b)
@@ -485,9 +490,11 @@ def Injective (f : ℝ → ℝ) : Prop := ∀ x y : ℝ, f x = f y → x = y
 
 example (f g : ℝ → ℝ) (hg : Injective g) (hf : Injective f) :
     Injective (g ∘ f) := by
-  sorry
+  intro x y h
+  specialize hg (f x) (f y) h
+  have h1 : f x = f y := hg
+  exact hf x y h1  
   done
-
 
 
 
