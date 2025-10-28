@@ -125,7 +125,7 @@ calc
 -- Alternatively, write out a calc block by hand.
 example {G : Type*} [Group G] {a b c d : G}
     (h : a⁻¹ * b * c * c⁻¹ * a * b⁻¹ * a * a⁻¹ = b) (h' : b * c = c * b) : b = 1 := by
-  rw?
+  sorry
 
 /-- Prove the following using `linarith`.
 Note that `linarith` cannot deal with implication or if and only if statements. -/
@@ -195,8 +195,8 @@ def Continuous' (f : ℝ → ℝ) := ∀ x, ContinuousAtPoint f x
 -- Exercise for you. Remember that you can use `unfold` to expand a definition.
 example (f g : ℝ → ℝ) (hfg : ∀ x, ContinuousAtPoint f x ↔ ContinuousAtPoint g x) :
     Continuous' f ↔ Continuous' g := by
-  sorry
-  done
+  unfold Continuous'
+  simp[hfg]
 
 def All (p : ℝ → Prop) := ∀ x, p x
 
@@ -211,13 +211,51 @@ example (p q : ℝ → Prop) (h : ∀ x, p x ↔ q x) :
 
 -- Is the following true? If yes, prove it in Lean.
 -- If not, give a counterexample and prove it. (What do you have to do to do so?)
-example (p q : ℕ → Prop) (h: (∃ x, p x) ↔ (∃ x, q x)) : ∀ x, p x ↔ q x := by
-  sorry
+-- The schema is false in general:
+
+
+
+example:
+  ¬ (∀( p q : ℕ → Prop),
+      ((∃ x, p x) ↔ (∃ x, q x)) → ∀ x, p x ↔ q x) := by
+  intro H
+ -- Counterexample
+  let p : ℕ → Prop := fun x => x ≠ 0
+  let q : ℕ → Prop := fun _ => True
+ -- It satisfies the condition (∃ x, p x) ↔ (∃ x, q x)
+  have h: (∃ x, p x) ↔ (∃ x, q x) := by
+    constructor
+    ·intro ⟨x, hpx⟩ -- p: (∃ x, x ≠ 0)
+     use x
+    ·intro hx'   --  q: (∀ x, True)
+     exact ⟨1, Nat.one_ne_zero⟩  -- 1 ≠ 0
+ -- Assume the condition
+  have h' := H p q h -- Assume ∀ (x : ℕ), p x ↔ q x
+  have h'0 : p 0 ↔ q 0 := h' 0
+  have q0 : q 0 := trivial --  q: (∀ x, True) is trival for x = 0
+  rw [← h'0] at q0   --  q 0 implies p 0, i.e. we get 0 ≠ 0
+  exact q0 rfl       -- 0 ≠ 0 contradicts reflexivity
 
 /- Prove the following with basic tactics, without using `tauto` or lemmas from Mathlib. -/
 lemma exists_distributes_over_or {α : Type*} {p q : α → Prop} :
     (∃ x, p x ∨ q x) ↔ (∃ x, p x) ∨ (∃ x, q x) := by
-  sorry
+  constructor
+  · intro h -- Assume (∃ x, p x ∨ q x)
+    obtain ⟨x, hx⟩ := h -- x and hx: p x ∨ q x
+    obtain hp | hq := hx
+    · left
+      exact ⟨x, hp⟩ -- Cases of (∃ x, p x): px
+    · right
+      exact ⟨x, hq⟩ -- Cases of (∃ x, q x): qx
+  · intro h' -- Assume (∃ x, p x) ∨ (∃ x, q x)
+    obtain hp' | hq'  := h'  -- Cases hp': (∃ x, p x) and hq': (∃ x, q x)
+    · obtain ⟨x, hp⟩ := hp'   -- from ∃ x, p x, build ∃ x, p x ∨ q x
+      use x
+      left; exact hp
+    · obtain ⟨x, hq⟩ := hq'  -- from ∃ x, q x, build ∃ x, p x ∨ q x
+      use x
+      right; exact hq
+
   done
 
 end Logic
@@ -236,7 +274,7 @@ section Functions
 -- Use `exact?`, `apply?` or `rw??` to find this theorem in mathlib.
 -- Describe what you are doing.
 example (p : ℕ) [hp: Fact (Nat.Prime p)] (x : ZMod p) : x ^ p = x := by
-  sorry
+  exact ZMod.pow_card x -- A variation on Fermat's little theorem is euqivalent to this argument
   done
 
 -- The above theorem has a name. What is it?
@@ -245,24 +283,82 @@ example (p : ℕ) [hp: Fact (Nat.Prime p)] (x : ZMod p) : x ^ p = x := by
 
 -- Use `rw??` to find the following theorem in mathlib.
 example (p : ℕ) [hp: Fact (Nat.Prime p)] (k : ZMod p) (hk : k ≠ 0) : k ^ (p - 1) = 1 := by
-  sorry
+  rw [ZMod.pow_card_sub_one_eq_one hk]  -- Rewriting by a variation on Fermat's little theorem
   done
 
 -- Prove the following.
 example (p : ℕ) [Fact (Nat.Prime p)] :
     (fun k ↦ k ^ p + 2 * k ^ (2 * (p - 1) + 1) : ZMod p → ZMod p) = (fun k ↦ 3 * k) := by
-  sorry
-  done
+  ext k
+  -- Fermat's little theorem: k^p = k in ZMod p
+  have h1 : k ^ p = k := ZMod.pow_card k
+  by_cases hk : k = 0
+  · subst hk
+    -- both sides are 0
+    simp [h1]
+  · -- k ≠ 0 : use the “p−1” lemma on units and come back to ZMod
+    have hphi : k ^ (p - 1) = (1 : ZMod p) := by
+      -- move back from units and rewrite the exponent
+      rw [ZMod.pow_card_sub_one_eq_one hk]
+    have h2 : k ^ (2 * (p - 1) + 1) = k := by
+      calc
+        k ^ (2 * (p - 1) + 1)
+            = k ^ (2 * (p - 1)) * k := by
+                -- (n+1)-th power
+                ring
+        _   = (k ^ (p - 1)) ^ 2 * k := by
+                -- 2*(p-1) = (p-1)*2 and pow_mul
+                ring
+        _   = (1 : ZMod p) ^ 2 * k := by simp [hphi] -- k ^ (p - 1) = (1 : ZMod p)
+        _   = k := by simp
+    calc
+      k ^ p + 2 * k ^ (2 * (p - 1) + 1)
+          = k + 2 * k ^ (2 * (p - 1) + 1) := by simp[h1] -- k ^ p = k
+      _ = k + 2 * k := by simp[h2] --k ^ (2 * (p - 1) + 1) = k
+      _ = 3 * k := by ring
 
 -- Prove the following.
 example (p : ℕ) [Fact (Nat.Prime p)] (k : ZMod p) : k ^ (3 * (p - 1) + 1) = k := by
-  sorry
+  by_cases hk : k = 0
+  · subst hk
+    -- both sides are 0
+    simp
+  · -- k ≠ 0 : use the “p−1” lemma on units and come back to ZMod
+    have hphi : k ^ (p - 1) = (1 : ZMod p) := by
+      -- move back from units and rewrite the exponent
+      rw [ZMod.pow_card_sub_one_eq_one hk]
+    calc
+      k ^ (3 * (p - 1) + 1)
+              = k ^ (3 * (p - 1)) * k := by
+                -- (n+1)-th power
+                ring_nf
+        _   = (k ^ (p - 1)) ^ 3 * k := by
+                -- 3*(p-1) = (p-1)*3 and pow_mul
+                ring
+        _   = (1 : ZMod p) ^ 3 * k := by simp [hphi] -- k ^ (p - 1) = (1 : ZMod p)
+        _   = k := by simp
   done
 
 example (p : ℕ) [Fact (Nat.Prime p)] (k : ZMod p) : k ^ (5 * (p - 1) + 1) = k := by
-  sorry
+  by_cases hk : k = 0
+  · subst hk
+    -- both sides are 0
+    simp
+  · -- k ≠ 0 : use the “p−1” lemma on units and come back to ZMod
+    have hphi : k ^ (p - 1) = (1 : ZMod p) := by
+      -- move back from units and rewrite the exponent
+      rw [ZMod.pow_card_sub_one_eq_one hk]
+    calc
+      k ^ (5 * (p - 1) + 1)
+              = k ^ (5 * (p - 1)) * k := by
+                -- (n+1)-th power
+                ring_nf
+        _   = (k ^ (p - 1)) ^ 5 * k := by
+                -- 5*(p-1) = (p-1)*5 and pow_mul
+                ring
+        _   = (1 : ZMod p) ^ 5 * k := by simp [hphi] -- k ^ (p - 1) = (1 : ZMod p)
+        _   = k := by simp
   done
-
 end Functions
 
 
