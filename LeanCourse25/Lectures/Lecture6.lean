@@ -44,6 +44,13 @@ Last time we saw:
   - Unions/intersections: `⋃ i : ι, C i`, `⋃ i ∈ s, C i` or `⋃₀ C`;
 -/
 
+/- Answering a question: "how to subtract `x` from both sides of an equation? -/
+-- #loogle _ - _ = _ - _ ↔ _ -- do this on the website to find `sub_left_inj`
+example (x y z : ℝ) : y = z := by
+  rw [← sub_left_inj (a := x)]
+  sorry
+  done
+
 /- # Today: Sets (continued), numbers -/
 
 /- We can take images and preimages of sets.
