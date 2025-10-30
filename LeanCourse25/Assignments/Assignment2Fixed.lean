@@ -471,21 +471,79 @@ def EventuallyGrowsFaster (s t : ℕ → ℕ) : Prop :=
 /- show that `n * s n` grows (eventually) faster than `s n`. -/
 lemma eventuallyGrowsFaster_mul_left :
     EventuallyGrowsFaster (fun n ↦ n * s n) s := by
-  sorry
-  done
+intro k
+use k
+intro n hn
+calc
+  k * s n ≤ n * s n := by gcongr
+
+
+
+
 
 /- Show that if `sᵢ` grows eventually faster than `tᵢ` then
 `s₁ + s₂` grows eventually faster than `t₁ + t₂`. -/
 lemma eventuallyGrowsFaster_add {s₁ s₂ t₁ t₂ : ℕ → ℕ}
     (h₁ : EventuallyGrowsFaster s₁ t₁) (h₂ : EventuallyGrowsFaster s₂ t₂) :
     EventuallyGrowsFaster (s₁ + s₂) (t₁ + t₂) := by
-  sorry
+  -- unfold the definition so we can see the quantifiers and inequalities
+  unfold EventuallyGrowsFaster at h₁ h₂ ⊢
+  -- fix an arbitrary multiplier k
+  intro k
+  -- from h₁, obtain a threshold N₁ such that for all n ≥ N₁, k * t₁ n ≤ s₁ n
+  obtain ⟨N₁,hN₁⟩ := h₁ k
+  -- from h₂, obtain a threshold N₂ such that for all n ≥ N₂, k * t₂ n ≤ s₂ n
+  obtain ⟨N₂,hN₂⟩ := h₂ k
+  -- propose a single threshold large enough for both conditions
+  refine ⟨ max N₁ N₂ ,?_ ⟩
+  -- now fix an arbitrary n ≥ max N₁ N₂
+  intro n hn
+  -- from n ≥ max N₁ N₂, deduce n ≥ N₁ and n ≥ N₂
+  have h1: k * t₁ n ≤ s₁ n := hN₁ n (le_of_max_le_left hn)
+  have h2: k * t₂ n ≤ s₂ n := hN₂ n (le_of_max_le_right hn)
+  -- turn the goal into a pointwise statement
+  change k * (t₁ n + t₂ n) ≤ s₁ n + s₂ n
+  -- now distribute and add the two bounds
+  calc
+    k * (t₁ n + t₂ n)
+        = k * t₁ n + k * t₂ n := by
+          simp [Nat.mul_add]
+    _ ≤ s₁ n + s₂ n           := Nat.add_le_add h1 h2
   done
 
+
+
 /- Find a positive function that grows faster than itself when shifted by one. -/
-lemma eventuallyGrowsFaster_shift : ∃ (s : ℕ → ℕ),
+/-!  Find a positive function that grows faster than itself when shifted by one. -/
+lemma eventuallyGrowsFaster_shift :
+  ∃ (s : ℕ → ℕ),
     EventuallyGrowsFaster (fun n ↦ s (n+1)) s ∧ ∀ n, s n ≠ 0 := by
-  sorry
-  done
+  -- choose the sequence: s n = (n+1)!
+  refine ⟨fun n => (n+1)!, ?fast, ?pos⟩
+
+  -- (1) show: (n ↦ (n+2)!) eventually dominates (n ↦ (n+1)!)
+  · -- unfold the definition in the goal shape
+    intro k
+    -- a simple threshold works: N = k
+    refine ⟨k, ?_⟩
+    intro n hn
+    -- goal is: k * (n+1)! ≤ (n+2)!
+    -- rewrite (n+2)! as (n+2) * (n+1)!
+    have fact_succ : (n+2)! = (n+2) * (n+1)! := by
+      simp [Nat.factorial_succ,
+             Nat.add_comm, Nat.add_left_comm]
+    -- from n ≥ k, get k ≤ n+2
+    have hk_le_n2 : k ≤ n + 2 := by
+      have h1 : n ≤ n + 1 := Nat.le_succ n
+      have h2 : n + 1 ≤ n + 2 := Nat.le_succ (n + 1)
+      exact Nat.le_trans hn (Nat.le_trans h1 h2)
+    -- multiply both sides by (n+1)! on the right
+    have : k * (n+1)! ≤ (n+2) * (n+1)! := Nat.mul_le_mul_right ((n+1)!) hk_le_n2
+    -- finish via the factorial rewrite
+    simpa [fact_succ]
+
+  -- (2) positivity: factorials are never zero in ℕ
+  · intro n
+    simpa using Nat.factorial_ne_zero (n+1)
 
 end Growth
