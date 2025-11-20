@@ -1,3 +1,5 @@
+## Project 2: your own formalisation project
+
 ## Personal Info
 
 Please fill out the following. Fill in the project topic once you have decided.
@@ -16,11 +18,11 @@ Since a project likely consists of more than 1 file, it will be useful to publis
 You can work on your project in groups of two (and we recommend doing so).
 `Git.md` has a section `Working with a partner` about handling this in git.
 
-
 ## Formalization Topics
 
 You can choose a topic in any area of mathematics.
-Please ask Floris van Doorn and Michael Rothgang to approve your project topic.
+Please enter your project topic in [this table](https://uni-bonn.sciebo.de/s/tBzqggEFajsgwC6), and ask Floris van Doorn or Michael Rothgang to approve your project topic.
+
 
 A good topic should be
 * not yet in mathlib (although it's also fine to give a different proof of something already in mathlib);
@@ -114,23 +116,19 @@ Here are some tips for your project.
 
 ### Searching
 
-During class I already discussed searching using the name (using autocomplete or the mathlib docs), or the statement (using `apply?` or `rw?`). Additional options:
-
-* Search Mathlib using natural language: https://leansearch.net/
-* Search Mathlib using precise syntax: https://loogle.lean-lang.org/
-* Searching on GitHub directly: https://github.com/leanprover-community/mathlib4
-  - This can be useful when searching for a mathematical theorems using its name,
-    since the mathlib docs search doesn't search through the documentation of a definition or theorem (only its name).
+During class I already discussed searching using the name (using autocomplete or the mathlib docs), the statement (using `exact?`, `apply?`, `have?` or `rw??`), using natural language (leansearch)
+or precise syntax (loogle).
 
 ### Asking for help
 
-* If you have trouble with anything, make sure to ask the tutor or teacher for help during class or office hours.
+* If you have trouble with anything, make sure to ask the tutor or teacher for help during class, the tutorial or the Lean hacking session.
 * If you are stuck on something, try replacing it by `sorry` and move on to the next part until you can ask about it.
 
 * You are allowed to ask any AI for help. I do not necessarily recommend using them,
-  often their suggestions are not very helpful.
+  often their suggestions are not very helpful. If you're using AI, you need to document this (see below).
   * GitHub copilot can sometimes help with stating lemmas or proving a set.
-  * ChatGPT knows some Lean, but it bad at proofs and often suggests outdated Lean 3 syntax
+  * ChatGPT knows some Lean, but it can be bad at proofs (and sometimes suggests outdated Lean 3 syntax)
+
 
 ### Writing definitions
 
@@ -151,3 +149,4 @@ Please answer the following questions:
 * What are the main results in your formalization.
 * Do you have any `sorry`'s or unfinished proofs? Describe what part (if any) is unfinished.
 * What references/sources have you used?
+* If you used AI: what tools did you use? How did you use it? Describe what parts of the projects are done by the AI and which parts by you.
