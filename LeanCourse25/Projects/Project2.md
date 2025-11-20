@@ -84,17 +84,22 @@ Some suggested topics:
   - Solve some diophantine equations. For example: show that there are no nonzero integer solutions to `x^4-y^4=z^2`. Find all solutions to `x^2+y^2=z^3` and to `|2^k-3^l|=1`.
   - **Hurwitz’s theorem** ([ProofWiki link](https://proofwiki.org/wiki/Hurwitz%27s_Theorem_(Number_Theory))) on approximating irrational numbers by rationals.
 
-* In **set theory**: Define weakly compact cardinals, and prove that some other (combinatorial) properties are equivalent to this definition, e.g. properties 1-4 from [Wikipedia](https://en.wikipedia.org/wiki/Weakly_compact_cardinal).
+* In **order theory**: Define the [Boolean completion](https://en.wikipedia.org/wiki/Complete_Boolean_algebra#The_completion_of_a_Boolean_algebra) of a Boolean algebra
+
+* In **set theory**:
+  - Define weakly compact cardinals, and prove that some other (combinatorial) properties are equivalent to this definition, e.g. properties 1-4 from [Wikipedia](https://en.wikipedia.org/wiki/Weakly_compact_cardinal).
+  - Define generalized stationarity and prove Fodor's lemma for this: https://en.wikipedia.org/wiki/Stationary_set#Generalized_notion
 
 * In **topology**:
   - [general topology] Define the Möbius strip and/or the Klein bottle and prove basic properties (e.g.: different constructions are equivalent; boundary of Möbius strip is connected and homotopy equivalent to `S¹`)
   Optional: prove they are smooth manifolds (with boundary).
   - [general topology] Define the [long line](https://en.wikipedia.org/wiki/Long_line_(topology)) and show that it is a topological manifold that is not separable. If time permits, show that it is sequentially compact, but not compact, or show other properties from [this list](https://topology.pi-base.org/spaces/S000038).
   - [general topology] Define some spaces that are typically used for counterexamples, such as the Hawaiian earring, wild knots or the horned sphere, and (dis)prove some topological properties for them.
+  - [general topology] Prove Sierpinski's theorem: A nonempty countable metric space without isolated points is homeomorphic to `ℚ`.
+  - [general topology] Prove the Sierpinski-Mazurkiewicz theorem: A countable compact Hausdorff space is homeomorphic to an ordinal with the order topology.
   - [algebraic topology] Mathlib has a definition of simplicial complexes. Define oriented simplices and simplicial homology (if useful you can define abstract simplicial complexes yourself and do it for that definition).
   - [algebraic topology] Mathlib has a definition of singular homology: prove that is satisfies the homotopy invariance axiom. (The definition of singular homology uses abstract category theory machinery, so this is more suitable if you have used Lean before.)
   - [algebraic topology] Define n-connected spaces and n-connected maps (by defining the homotopy fiber of a (continuous) map). Prove that for spaces: 0-connected = path connected and 1-connected = simply connected. Try to prove some other easy properties, but beware that many properties are hard, since Mathlib doesn't have homology, Borsuk-Ulam or cellular approximation yet.
-
 
 ## Formalization Tips
 
