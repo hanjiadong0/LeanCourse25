@@ -375,6 +375,22 @@ end Metric
 
 
 
+/-
+
+Now you have time to do the teaching evaluations for this course.
+
+Course ID: V3A6_F4A1-6
+Password: qbfhzz9zv9kr
+Link to the survey: https://www.umfragen.uni-bonn.de/lehre/Mathe/
+
+Direct link to the survey (no manual entry necessary):
+https://www.umfragen.uni-bonn.de/lehre/Mathe/?CourseID=V3A6_F4A1-6&Password=qbfhzz9zv9kr
+
+
+If you have time after that, feel free to look at the exercise below or go home early.
+
+-/
+
 
 /- # Exercises
 
