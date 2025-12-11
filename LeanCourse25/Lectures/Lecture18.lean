@@ -184,6 +184,20 @@ Note that this has weaker assumptions versions you often see:
 
 end MeasureTheory
 
+/- Here is a proof of one exercise from last lecture. -/
+/- Do this *without* using the fundamental theorem of calculus. -/
+example (a b : ℝ) : ∫ x in a..b, sin x * cos x =
+    (cos (2 * a) - cos (2 * b)) / 4 := by
+  have h1 : ∀ x, sin (2 * x) = 2 * sin x * cos x := by
+    exact fun x ↦ sin_two_mul x
+  have h2 : ∀ x, sin (2 * x) / 2 = sin x * cos x := by
+    intro x
+    rw [h1]
+    ring
+  simp_rw [← h2]
+  simp
+  ring
+  done
 
 
 
