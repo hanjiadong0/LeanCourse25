@@ -62,16 +62,16 @@ example (x : ℤˣ) : x = 1 ∨ x = -1 := Int.units_eq_one_or x
 -/
 -- less good
 example {P : Nat → Prop} {m}
-(h0 : P m) (h1 : ∀ n, m ≤ n → P n → P (n + 1)) : ∀ n, m ≤ n → P n := by
-    apply Nat.le.rec
-    · exact h0
-    · exact h1 _
+    (h0 : P m) (h1 : ∀ n, m ≤ n → P n → P (n + 1)) : ∀ n, m ≤ n → P n := by
+  apply Nat.le.rec
+  · exact h0
+  · exact h1 _
 
 -- Soft rule: when you have to break a theorem statement, breaking between hypotheses and
--- conclusions is better than in the middle of hypotheses
+-- conclusion is better than in the middle of hypotheses
 -- less good
-example {P : Nat → Prop} {m} (h0 : P m)
-    (h1 : ∀ n, m ≤ n → P n → P (n + 1)) : ∀ n, m ≤ n → P n := by
+example {P : Nat → Prop} {m} (h0 : P m) (h1 : ∀ n, m ≤ n → P n → P (n + 1)) :
+    ∀ n, m ≤ n → P n := by
   apply Nat.le.rec
   · exact h0
   · exact h1 _
@@ -100,10 +100,13 @@ example {a b n : ℕ} : a+  b*   n
 -- better
 example {a b n : ℕ} : a + b * n = 4 := sorry
 
--- a single spaces before parentheses is good; no need for spaces before closing parentheses
-example {a b c d n : ℤ} : a+(b * n + d  ) -  ( 37) = 4 := sorry
+-- a single spaces before opening parentheses is good;
+-- no need for spaces before closing parentheses
+-- put spaces round colons
+example  {a b c d n:ℤ } : a+(b * n + d  ) -  ( 37) = 4 := sorry
 
 -- better: let's insert this ourselves!
+example {a b c d n : ℤ} : a + b * n + d - 37 = 4 := sorry
 
 -- put a single space after a comma
 -- less good
@@ -111,7 +114,8 @@ example {a b : ℤ} : a + b * 2 = 2 * b + 0 + a := by
   rw [ add_comm,mul_comm,      add_zero   ]
 
 -- better: let's write this ourselves
-
+example {a b : ℤ} : a + b * 2 = 2 * b + 0 + a := by
+  rw [add_comm, mul_comm, add_zero]
 
 -- put a single space after ←; don't leave trailing commas in lists
 -- less good
@@ -119,23 +123,39 @@ example {a b : ℤ} : a + b * 2 = 2 * b + 0 + a := by
   rw [←add_comm,←  mul_comm,      add_zero  , ]
 
 -- better version: your turn
+example {a b : ℤ} : a + b * 2 = 2 * b + 0 + a := by
+  rw [← add_comm, ← mul_comm, add_zero]
+
+-- This style is sometimes also acceptable. Usually, you don't need
+-- to put comments about each individual rewrite.
+example {a b : ℤ} : a + b * 2 = 2 * b + 0 + a := by
+  rw [
+    -- a comment here
+    ← add_comm,
+    -- second step doing something
+    ← mul_comm,
+    add_zero
+  ]
 
 -- Use spaces around | in rcases or obtain patterns.
 example {k l : ℤ} : True := by
   have : k ≤ l ∨ l ≤ k := by exact Int.le_total k l
   -- Less good
-  obtain h|  h := this
+  --obtain h|  h := this
   -- better:
-  --obtain h | h := this
+  obtain h | h := this
   all_goals trivial
 
 
 -- Questions so far? One more example for you to practice. Format this proof nicely.
-example {a b c : ℝ} : a + (1 / 3 * c) * b * 2 + b* 1 / 3 * c = c * b + 0 + a := by
+example {a b c : ℝ} : a + (1/3 * c) * b * 2 + b* 1 / 3 * c = c * b + 0 + a := by
   rw [ add_comm,mul_comm,      add_zero   ]
   ring -- ignore the non-ideal proof; this is intentional
 
-
+-- solution:
+example {a b c : ℝ} : a + (1 / 3 * c) * b * 2 + b * 1 / 3 * c = c * b + 0 + a := by
+  rw [add_comm, mul_comm, add_zero]
+  ring -- ignore the non-ideal proof; this is intentional
 
 /- ## Checking your code automatically: warnings and linters
 
@@ -208,6 +228,7 @@ set_option linter.flexible true
 
 -- The `flexible` linter highlights non-terminal simps (see below). This is an example.
 example {n m : ℕ} (hm : m = 0) : n + 0 = n + m := by
+  -- better proof: simpa using hm
   simp
   exact hm
 
@@ -295,29 +316,46 @@ easily be shortened by omitting these when you did not need them. -/
 
 -- (Perhaps you have two superfluous unfold's, and the second requires the first.)
 
+-- Sometimes, you have `have` statements left in your code that
+-- you're not actually using.
+
 -- If you're using the `change` tactic, think if you really need it
 -- (or can use other tactics to manipulate your goal explicitly).
 
 
-/- You can combine several adjacent rewrites into one. -/
+/- You can combine several adjacent rewrites into one.
+Also, removing superfluous @ or unnecessary explicit arguments can be nice.
+(The latter can rarely make a rw slow: in this case, keep the argument.)
+-/
 example {a b : ℤ} : a + b * 2 = 2 * b + 0 + a := by
-  rw [add_comm]
-  rw [←  mul_comm]
-  rw [      add_zero  , ]
-
+  -- initial code:
+  -- rw [add_comm]
+  -- rw [←  mul_comm 2 b]
+  -- rw [      @add_zero  , ]
+  -- better version:
+  rw [add_comm, mul_comm, add_zero]
 
 /- You can use `rw at` and `simp at` to combined rewrites resp. simplification at
 hypotheses and goals. -/
 
 example {a b : ℤ} (hb : b = a + 0) : a + b * 2 + 0 = 3 * a := by
-  rw [add_zero]
-  rw [add_zero] at hb
+  -- old:
+  --rw [add_zero]
+  --rw [add_zero] at hb
+  -- better:
+  rw [add_zero] at ⊢ hb
   rw [hb]
   ring
 
 set_option linter.flexible false in
 example {a b : ℤ} (hb : b = a + 0) : a + b * 2 + 0 = 3 * a := by
-  simp at hb ⊢
+  -- old
+  --simp
+  --simp at hb
+  -- better:
+  --simp at hb ⊢
+  -- even shorter (can be slower):
+  simp at *
   rw [hb]
   ring
 
@@ -333,6 +371,15 @@ example : Continuous (fun x ↦ x * Real.sin x) := by
   · apply continuous_id
   · refine continuous_sin
 
+-- better version
+example : Continuous (fun x ↦ x * Real.sin x) := by
+  refine Continuous.mul ?_ ?_
+  · -- Note: when converting apply to exact, you may need to insert additional
+    -- `_` (or `..` for "insert as many `_` as needed").
+    -- `apply` performs unification to find the remaining arguments; `exact` does not.
+    exact continuous_id
+  · exact continuous_sin
+
 /- You can inline subgoals as proof terms.
 Dot notation can also make your proof more readable: you saw this already. -/
 
@@ -345,6 +392,14 @@ example : Continuous (fun x ↦ x + x * Real.sin x) := by
     · refine continuous_sin
   done
 
+-- better version
+example : Continuous (fun x ↦ x + x * Real.sin x) :=
+  continuous_id.add (continuous_id.mul continuous_sin)
+
+-- Another trick: you can also use tactics to produce such short proof terms
+example : Continuous (fun x ↦ x + x * Real.sin x) := by
+  exact continuous_id.add (by fun_prop)
+
 -- If you're rewriting by an `iff` lemma in one direction, if that direction has a name,
 -- using that is also slightly simpler.
 
@@ -355,12 +410,22 @@ example : Continuous (fun x ↦ x + x * Real.sin x) := by
 -- if one proof of a subgoal is short, inlining this can make the code even shorter.
 
 -- This also applies if you have a `have` statement with a short proof that you only use once.
+example {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) : Measurable f := by
+  have hf : Continuous f := by exact ContDiff.continuous hf
+  exact Continuous.borel_measurable hf
+
+-- with have inlined
+example {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) : Measurable f := by
+  exact Continuous.borel_measurable (ContDiff.continuous hf)
+-- using dot notation and omitting the `by apply`
+example {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) : Measurable f :=
+  (hf.continuous).borel_measurable
 
 -- Prettify your code: if you open a namespace often; maybe `open` it (requires judgement)
 
 
 
-/- Practice time: take 10 minutes and review either
+/- Practice time: take 5 minutes and review either
 - code in your current formalisation project
 - an old exercise submission or yours,
 
@@ -379,45 +444,20 @@ This can be more powerful, but is less universal.
 example : Continuous (fun x ↦ x + x * Real.sin x) := by fun_prop
 
 /- Examples of such more powerful tactics include:
-- (let's collect examples)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-simp
-norm_num
-ring
-field_simp
-linarith
-gcongr
-order
-omega (note: called `lia` in recent mathlib)
-positivity
-finiteness
-fun_prop
-bicategory
-aesop and grind (check performance!)
-depending on your area, there are more specialised tactics
+- tauto
+- simp and friends
+- norm_num
+- ring; group; abel; field_simp
+- fun_prop; (continuity; measurability)
+- linarith; nlinarith
+- gcongr, congr
+- order
+- omega, cutsat (prefer `cutsat` if possible; renamed to `lia`)
+- positivity; finiteness
+- bicategory
+- grind (check performance!)
+- aesop (check performance!)
+- depending on your area, there are more specialised tactics
 
 -/
 
@@ -440,6 +480,9 @@ Over-golfing code makes it less readable and hard to modify: don't overdo it.
 - style trade-off: longer calc blocks versus a sequence of rewrites
   (In the final version, I'll put an example where this becomes clear.)
 
+- speed: sometimes, tactics are appreciably slower
+  recommendation: favour readability, and optimise once you notice speed issues (see below).
+
 -/
 
 /- ## Higher-level advice
@@ -457,7 +500,7 @@ Over-golfing code makes it less readable and hard to modify: don't overdo it.
   Mathlib has quite polished code by experienced contributors,
   i.e. the numbers will be different for you.
 
-* nost mathlib proofs are fairly short, because intermediate lemmas and well-golfed
+* most mathlib proofs are fairly short, because intermediate lemmas and well-golfed
 
 * in larger projects in particular, avoid non-terminal simp: can break if new simp lemmas are added
 
@@ -465,6 +508,17 @@ Over-golfing code makes it less readable and hard to modify: don't overdo it.
 
 /- ## Investigating slow declarations: profiling -/
 
--- let's look at a particular example
+-- let's look at a particular example: skipped; see the practical exercises
+-- in short, use `set_option trace.profiler true`
 
--- common slow tactics
+/- Some tactics can commonly be slow:
+- aesop -> aesop? gives you a proof script; or try just `simp_all`
+- grind -> grind? can help (or write a manual proof)
+- continuity, measurability -> fun_prop
+- replace by a faster tactic: simp_all -> simp_all? -> simp at *
+   -> simp at ... -> simp only [...] at ...
+- (n)linarith -> (n)linarith only
+
+None of these tactics is always slow: write readable code first, using powerful tactics
+when they help, and optimise once you notice something non-ideal.
+-/
