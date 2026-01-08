@@ -1,0 +1,471 @@
+import Mathlib.Tactic
+--import Mathlib.Geometry.Manifold.Diffeomorph -- TODO: minimize!
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Mathlib.Analysis.Calculus.Deriv.Basic
+
+open Function
+set_option linter.unusedVariables false
+noncomputable section
+
+/- ## Last time
+
+Last time: the logic of Lean
+- stages: parsing, macro expansion, elaboration, typechecking (possibly compilation); unsafe
+- delaborators and unexpanders
+- expressions
+- definitional equality
+- universes
+- inductive types
+- quotients
+- axioms
+- misc. items
+- consistency
+
+**Today**: clean code and formalisation best practices
+
+-/
+
+
+/- ## Code style -/
+
+/- There are various aspects to code style. A readable and consistent style can make your
+code easier to read and work with. Being consistent with others makes collaboration easier.
+This, of course, requires agreeing on a common style.
+
+I will go through various relevant aspects of mathlib's coding style,
+which has been tested through extensive practice. You can find the full guidelines here:
+https://leanprover-community.github.io/contribute/style.html
+-/
+
+/- Keep lines to 100 characters. (This makes them easier to read; not all editors, terminal etc.
+support line wrap). -/
+-- less good
+example {R : Type*} [CommRing R] (x y : R) (n : ℕ) : (x + y) ^ n = ∑ m ∈ Finset.range (n + 1), x ^ m * y ^ (n - m) * Nat.choose n m := by
+  exact add_pow x y n
+
+-- better
+example {R : Type*} [CommRing R] (x y : R) (n : ℕ) : (x + y) ^ n =
+    ∑ m ∈ Finset.range (n + 1), x ^ m * y ^ (n - m) * Nat.choose n m := by
+  exact add_pow x y n
+
+/- Put a colon at the end of the line, not at the beginning of the next one -/
+-- less readable
+example (x : ℤˣ)
+  : x = 1 ∨ x = -1
+  := Int.units_eq_one_or x
+-- better
+example (x : ℤˣ) : x = 1 ∨ x = -1 := Int.units_eq_one_or x
+
+/- Indentation:
+- proof bodies should be indented by two spaces
+- proofs of e.g. have's should be indented by two spaces more
+- if the theorem statement spans several lines, indent subsequent lines by four spaces
+-/
+-- less good
+example {P : Nat → Prop} {m}
+(h0 : P m) (h1 : ∀ n, m ≤ n → P n → P (n + 1)) : ∀ n, m ≤ n → P n := by
+    apply Nat.le.rec
+    · exact h0
+    · exact h1 _
+
+-- Soft rule: when you have to break a theorem statement, breaking between hypotheses and
+-- conclusions is better than in the middle of hypotheses
+-- less good
+example {P : Nat → Prop} {m} (h0 : P m)
+    (h1 : ∀ n, m ≤ n → P n → P (n + 1)) : ∀ n, m ≤ n → P n := by
+  apply Nat.le.rec
+  · exact h0
+  · exact h1 _
+
+-- good example
+theorem le_induction {P : Nat → Prop} {m}
+    (h0 : P m) (h1 : ∀ n, m ≤ n → P n → P (n + 1)) :
+    ∀ n, m ≤ n → P n := by
+  apply Nat.le.rec
+  · exact h0
+  · exact h1 _
+
+
+
+
+
+
+
+/- Spacing: insert spaces in the right places also increases readability -/
+
+/- Put spaces around binary operators (such as +, -, *, /, ≤, = and ⊆). -/
+
+-- less good
+example {a b n : ℕ} : a+  b*   n
+    = 4 := sorry
+-- better
+example {a b n : ℕ} : a + b * n = 4 := sorry
+
+-- a single spaces before parentheses is good; no need for spaces before closing parentheses
+example {a b c d n : ℤ} : a+(b * n + d  ) -  ( 37) = 4 := sorry
+
+-- better: let's insert this ourselves!
+
+-- put a single space after a comma
+-- less good
+example {a b : ℤ} : a + b * 2 = 2 * b + 0 + a := by
+  rw [ add_comm,mul_comm,      add_zero   ]
+
+-- better: let's write this ourselves
+
+
+-- put a single space after ←; don't leave trailing commas in lists
+-- less good
+example {a b : ℤ} : a + b * 2 = 2 * b + 0 + a := by
+  rw [←add_comm,←  mul_comm,      add_zero  , ]
+
+-- better version: your turn
+
+-- Use spaces around | in rcases or obtain patterns.
+example {k l : ℤ} : True := by
+  have : k ≤ l ∨ l ≤ k := by exact Int.le_total k l
+  -- Less good
+  obtain h|  h := this
+  -- better:
+  --obtain h | h := this
+  all_goals trivial
+
+
+-- Questions so far? One more example for you to practice. Format this proof nicely.
+example {a b c : ℝ} : a + (1 / 3 * c) * b * 2 + b* 1 / 3 * c = c * b + 0 + a := by
+  rw [ add_comm,mul_comm,      add_zero   ]
+  ring -- ignore the non-ideal proof; this is intentional
+
+
+
+/- ## Checking your code automatically: warnings and linters
+
+Ensuring consistent style is nice, but doing so by hand is error-prone.
+Also, this is very mechanical: can a computer do this for us?
+-/
+
+/- Yes, they can (once we tell it how). Lean has various kinds of checks for your code.
+You have seen the first two mechanisms already.
+- errors if code does not compile
+- warnings on certain suspicious patterns: some of them are built into Lean (e.g., using sorry)
+  This project has disabled many warnings (so you can focus on understanding the code before
+  focusing on style); you can enable them manually.
+
+You may not have seen `linters` yet. They are little programms that look at your code and emit
+further warnings. Linters can do almost everything you tell them to: if a certain pattern is
+problematic, probably one can write a linter against it!
+-/
+
+/- `syntax linters` give you feedback directly in VS Code, by underlining the affected code
+By writing `set_option <lintername> true`, you enable a specific syntax linter for the rest of
+the current file. Writing `set_option <lintername> false` disables the linter again.
+
+`set_option <lintername> false in` only disables the linter in a particular declaration
+(e.g., a lemma, theorem or definition).
+
+If you know you want to use a linter everywhere, you should enable it in your whole project.
+You can ask me directly how to do so.
+-/
+
+set_option linter.unusedVariables true
+
+example {a b c d : ℤ} : a + b * 2 = 2 * b + 0 + a := by ring
+
+set_option linter.unusedVariables false
+-- Now, there is no warning, as the linter is disabled.
+example {a b c d : ℤ} : a + b * 2 = 2 * b + 0 + a := by ring
+
+set_option linter.unusedVariables true
+
+set_option linter.unusedVariables false in
+-- The linter is also disabled, but just for this particular example.
+example {a b c d : ℤ} : a + b * 2 = 2 * b + 0 + a := by ring
+
+-- This example warns.
+example {n : ℕ} : True := trivial
+
+
+/- Mathlib has a number of syntax linters. One example is the `multigoal` linter, which enforces
+that you use focusing dots when your proof produces multiple goals. -/
+
+set_option linter.style.multiGoal true
+
+example {P : Nat → Prop} {m}
+    (h0 : P m) (h1 : ∀ n, m ≤ n → P n → P (n + 1)) :
+    ∀ n, m ≤ n → P n := by
+  apply Nat.le.rec
+  exact h0 -- this is the multigoal linter complaining
+  exact h1 _
+
+-- better version
+example {P : Nat → Prop} {m}
+    (h0 : P m) (h1 : ∀ n, m ≤ n → P n → P (n + 1)) :
+    ∀ n, m ≤ n → P n := by
+  apply Nat.le.rec
+  · exact h0
+  · exact h1 _
+
+set_option linter.flexible true
+
+-- The `flexible` linter highlights non-terminal simps (see below). This is an example.
+example {n m : ℕ} (hm : m = 0) : n + 0 = n + m := by
+  simp
+  exact hm
+
+-- Other linters check for e.g. tactics that should not be used any more,
+-- or other aspects of coding style.
+
+/- Mathlib defines many linters; it would be tedious to enable them one by one.
+You can write `set_option linter.mathlibStandardSet true` to enable all mathlib linters at once.
+(Disabling them all at once also works, in the way you would expect.)
+If you update your mathlib version and mathlib has defined a new linter in the meantime,
+this will automatically enable that linter also.
+-/
+
+set_option linter.mathlibStandardSet true
+
+/- What do you think: are there linters for the code style issues I told you about? -/
+
+
+
+
+
+
+
+
+/- Answer: yes and no
+- Mathlib has linters for some formatting checks. This includes checking spaces in all declaration
+  types (e.g., a theorem's hypotheses). It does not include e.g. proofs of theorems yet.
+- There is active work in mathlib extending the linter: this or next week, there will be a mathlib
+  linter that checks the formatting of all proofs, so you need not do so manually.
+  If you want to use it in your formalisation project, you'd need to update your mathlib version.
+  (Talk to Floris van Doorn or me if you're interested, or ask in the Lean hacking session.)
+- There is no auto-formatter for Lean code yet: this is being worked on.
+  I expecte that by next summer or fall, there will be an auto-formatter which can handle e.g.
+  all of mathlib, and your formalisation project also.
+
+-/
+
+/- Another kind of linters: `environment linters` process your entire file and give you feedback
+in batch form. They are useful for more global checks. You can run them by typing `#lint`. -/
+
+-- For instance, this linter checks for definitions which are missing a documentation string.
+
+def MyUndocumentedDefinition : ℕ := 0
+
+-- let's try what happens
+-- #lint
+
+
+/- ## Golfing your code
+
+*Golfing* refers to writing your code more compactly while retaining its meaning.
+Done right, this can make your code more elegant, compact and easier to understand and modify.
+(You can also overdo it, so it becomes harmful. More on this below.)
+
+Simplifying proofs mathematically can be hard. Golfing code is much easier to practice.
+Let's look at three different levels of golfing.
+-/
+
+/- Low-level golfs: these are more mechanical changes, which you can make without understanding
+a proof deeply. You only need to know the local context near it. This can be useful as a first step,
+before thinking about the next two levels. -/
+
+/- Some tactics don't do anything: you can just remove them. Mathlib has a linter for this. -/
+set_option linter.unusedTactic true
+
+/- Do you need every `unfold` or `simp` in your proof? I've seen exercise solutions which could
+easily be shortened by omitting these when you did not need them. -/
+
+-- Hint: when trying this, start removing these call from the end. Why?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- (Perhaps you have two superfluous unfold's, and the second requires the first.)
+
+-- If you're using the `change` tactic, think if you really need it
+-- (or can use other tactics to manipulate your goal explicitly).
+
+
+/- You can combine several adjacent rewrites into one. -/
+example {a b : ℤ} : a + b * 2 = 2 * b + 0 + a := by
+  rw [add_comm]
+  rw [←  mul_comm]
+  rw [      add_zero  , ]
+
+
+/- You can use `rw at` and `simp at` to combined rewrites resp. simplification at
+hypotheses and goals. -/
+
+example {a b : ℤ} (hb : b = a + 0) : a + b * 2 + 0 = 3 * a := by
+  rw [add_zero]
+  rw [add_zero] at hb
+  rw [hb]
+  ring
+
+set_option linter.flexible false in
+example {a b : ℤ} (hb : b = a + 0) : a + b * 2 + 0 = 3 * a := by
+  simp at hb ⊢
+  rw [hb]
+  ring
+
+/- The `simp_all` tactic simplifies at both all hypotheses and all goals. -/
+example {a b : ℤ} (hb : b = a + 0) : a + b * 2 + 0 = 3 * a := by
+  simp_all
+  ring
+
+/- If your proof ends with `refine`, using `exact` is usually clearer. -/
+open Real
+example : Continuous (fun x ↦ x * Real.sin x) := by
+  refine Continuous.mul ?_ ?_
+  · apply continuous_id
+  · refine continuous_sin
+
+/- You can inline subgoals as proof terms.
+Dot notation can also make your proof more readable: you saw this already. -/
+
+-- Let's improve this proof.
+example : Continuous (fun x ↦ x + x * Real.sin x) := by
+  apply Continuous.add
+  · apply continuous_id
+  · apply Continuous.mul
+    · apply continuous_id
+    · refine continuous_sin
+  done
+
+-- If you're rewriting by an `iff` lemma in one direction, if that direction has a name,
+-- using that is also slightly simpler.
+
+-- As a rule of thumb, inlining short proofs (e.g., at most 10 characters) can be useful.
+-- In particular, if it makes code shorter.
+
+-- This is particularly helpful when replacing `constructor` by the equivalent `refine` tactic:
+-- if one proof of a subgoal is short, inlining this can make the code even shorter.
+
+-- This also applies if you have a `have` statement with a short proof that you only use once.
+
+-- Prettify your code: if you open a namespace often; maybe `open` it (requires judgement)
+
+
+
+/- Practice time: take 10 minutes and review either
+- code in your current formalisation project
+- an old exercise submission or yours,
+
+and try to polish it according to what we just discussed.
+Ask me if you have questions.
+-/
+
+
+
+
+
+/- Medium-level golfing: use a better tactic.
+This can be more powerful, but is less universal.
+-/
+-- This is the proper proof of the example above.
+example : Continuous (fun x ↦ x + x * Real.sin x) := by fun_prop
+
+/- Examples of such more powerful tactics include:
+- (let's collect examples)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+simp
+norm_num
+ring
+field_simp
+linarith
+gcongr
+order
+omega (note: called `lia` in recent mathlib)
+positivity
+finiteness
+fun_prop
+bicategory
+aesop and grind (check performance!)
+depending on your area, there are more specialised tactics
+
+-/
+
+
+
+
+
+/- ## When to golf code?
+
+Over-golfing code makes it less readable and hard to modify: don't overdo it.
+"Under-golfing" makes it harder to see the forest for the trees. How much should you golf code?
+
+- first rule of thumb: if you're new to Lean, it's hard to over-golf (because you're still learning)
+- readability counts
+    - a single tactic can be better than many individual lemmas
+    - tactic choice matters: e.g. `ring` is better than `grind`,
+      because it's clearer what `ring` does (and `grind` can do many things)
+- "when the maths is obvious, you can golf"
+- mathlib: need to be able to modify and proofs, i.e. not too clever
+- style trade-off: longer calc blocks versus a sequence of rewrites
+  (In the final version, I'll put an example where this becomes clear.)
+
+-/
+
+/- ## Higher-level advice
+
+* is there a shorter argument? using mathlib results more?
+
+* does your result hold more generally? (if so, this can simplify the argument!)
+  In mathlib, use the largest (reasonable) generality in which your proof still works.
+  More abstraction can be more useful!
+
+* Extract intermediate results when sensible. Particularly if you can describe what it does.
+
+* Long proofs, where you already extracted intermediate lemmas, benefit from signalling comments.
+  Mathlib informal rule says "15 lines => must comment" (not strictly enforced; exceptions exist.)
+  Mathlib has quite polished code by experienced contributors,
+  i.e. the numbers will be different for you.
+
+* nost mathlib proofs are fairly short, because intermediate lemmas and well-golfed
+
+* in larger projects in particular, avoid non-terminal simp: can break if new simp lemmas are added
+
+-/
+
+/- ## Investigating slow declarations: profiling -/
+
+-- let's look at a particular example
+
+-- common slow tactics
