@@ -167,7 +167,7 @@ variable {V W : (x : M) → TangentSpace I x} {V : (x : M) → TangentSpace% x} 
 -- we will define these terms later today.
 example {V W : (x : M) → TangentSpace% x} (hV : CMDiff ⊤ (T% V)) (hW : CMDiff ⊤ (T% W)) :
     CMDiff ⊤ (T% (V + W)) := by
-  exact?
+  exact ContMDiff.add_section hV hW
 
 
 -- One interesting operation on vector fields is the Lie bracket:
@@ -244,8 +244,8 @@ variable
   [ContMDiffVectorBundle n F₂ E₂ I]
 
 
-/- A map `s : M → E` is called a *section* of a fibre bundle `π : E → M` if `π ∘ s = id`,
-i.e. `s x ∈ E x` for all `x : M`. In Lean, this is simply a dependent function.
+/- A map `s : M → E₁` is called a *section* of a fibre bundle `π : E₁ → M` if `π ∘ s = id`,
+i.e. `s x ∈ E₁ x` for all `x : M`. In Lean, this is simply a dependent function.
 -/
 variable {s : (x : M) → E₁ x}
 
@@ -277,6 +277,9 @@ variable {t : Cₛ^n⟮I; F₁, E₁⟯}
 example {s t : (x : M) → E₁ x} {hs : CMDiff n (T% s)} {ht : CMDiff n (T% t)} :
     CMDiff n (T% (s + t)) :=
   hs.add_section ht
+
+example {s' t' : Cₛ^n⟮I; F₁, E₁⟯} : Cₛ^n⟮I; F₁, E₁⟯ :=
+  s' + t'
 
 
 /- The product of two bundles is a smooth vector bundle. -/
@@ -325,7 +328,7 @@ section
 #check IsSmoothEmbedding
 
 example {f : M → N} (hf : IsSmoothEmbedding I J n f) : IsImmersion I J n f := by
-  exact?
+  exact hf.isImmersion
 
 
 /- Patrick Massot, Oliver Nash and Floris van Doorn have formalized
