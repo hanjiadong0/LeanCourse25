@@ -21,6 +21,8 @@ noncomputable section
 * Assignment 13 has many practice exercises, but does not require you to hand in anything.
   Work on your project instead.
 
+* There will be a draft of the mock exam by the end of the week.
+
 * There will be an "advanced Lean seminar" next semester
   (officially called Graduate Seminar in Applied Logic, S4A6).
   It will cover more advanced aspects, such as considerations how to design a large library,
@@ -157,7 +159,8 @@ example [AddGroup N] [LieAddGroup J ⊤ N] {f g : M → N} {n : ℕ∞}
 
 -- Let `V` be a vector field on `M`: two completely equivalent phrasings.
 variable {V W : (x : M) → TangentSpace I x} {V : (x : M) → TangentSpace% x} [IsManifold I 1 M]
--- Suppose `V` is smooth.
+-- Suppose `V` is smooth. The notation `T%` converts `V` from a dependent function
+-- to a function into the tangent bundle. We will explain this in more detail later.
   (hV : CMDiff ⊤ (T% V))
 
 -- What happens if we comment the `IsManifold I 1 M`? Let's try to understand the error message.
@@ -261,7 +264,9 @@ variable {s : (x : M) → E₁ x}
 
 /- If `E` is a smooth vector bundle, "`s` is a smooth section" is a sensible statement.
 `ContMDiff` requires a non-dependent function as an argument.
-The expression `T% s` takes the section `s` and converts it to a non-dependent section.
+The expression `T% s` takes the section `s` and converts it to a non-dependent section,
+i.e. a map into the bundle's total space. (In other words, it denotes post-composition with
+the inclusion of each bundle fiber into the total space.)
 -/
 variable {hs : CMDiff n (T% s)}
 
@@ -269,6 +274,8 @@ variable {hs : CMDiff n (T% s)}
 variable {hs : ContMDiff I (I.prod 𝓘(𝕜, F₁)) n (fun x ↦ TotalSpace.mk' F₁ x (s x))}
 
 -- There is also a type of bundled smooth sections, with special notation.
+-- Note: "bundled" has nothing to do with vector or fiber bundles;
+-- it refers to the fact that these combine a section with a proof of smoothenss.
 #check ContMDiffSection
 variable {t : Cₛ^n⟮I; F₁, E₁⟯}
 
@@ -278,9 +285,11 @@ example {s t : (x : M) → E₁ x} {hs : CMDiff n (T% s)} {ht : CMDiff n (T% t)}
     CMDiff n (T% (s + t)) :=
   hs.add_section ht
 
+-- We can also add bundled smooth sections:
+-- under the hood, this is using the above example.
 example {s' t' : Cₛ^n⟮I; F₁, E₁⟯} : Cₛ^n⟮I; F₁, E₁⟯ :=
   s' + t'
-
+example {s' t' : Cₛ^n⟮I; F₁, E₁⟯} : (s' + t') x = s' x + t' x := rfl
 
 /- The product of two bundles is a smooth vector bundle. -/
 
@@ -322,6 +331,11 @@ section
 
 #check Diffeomorph.isLocalDiffeomorph
 
+-- If `M` is finite-dimensional, `f` is an immersion if each differential
+-- `mfderiv% f p` is injective. Equivalently, each `p : M` has suitable
+-- charts in which `f` looks like a map `u ↦ (u, 0)`.
+-- In infinite dimensions, these definitions are no longer equivalent,
+-- the second one is the correct condition (and implies the first one).
 #check IsImmersion
 
 -- mathlib also knows about smooth embeddings: smooth embeddings are smooth immersions automatically
