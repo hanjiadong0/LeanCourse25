@@ -6,8 +6,6 @@ Authors: Michael Rothgang
 
 import LeanCourse25.Lectures.LocalSourceTargetProperty
 import Mathlib.Geometry.Manifold.IsManifold.ExtChartAt
---public import Mathlib.Analysis.Normed.Module.Shrink
---public import Mathlib.Topology.Algebra.Module.TransferInstance
 
 /-! # Smooth immersions
 

@@ -783,13 +783,6 @@ scoped elab:max "HasMFDerivAt%" ppSpace
   let (srcI, tgtI) ← findModels ef none
   mkAppM ``HasMFDerivAt #[srcI, tgtI, ef, ex, ef']
 
-/-- Try to find a model with corners on `e`.
-
-We pass `e` instead of just its type for better diagnostics. -/
-def _findModel (e : Expr) : TermElabM Expr := do
-  let etype ← whnf <| ← instantiateMVars <| ← inferType e
-  findModel etype
-
 /-- `TangentSpace% x'` elaborates to `TangentSpace I x`,
 trying to determine `I` from the local context. -/
 scoped elab:max "TangentSpace%" ppSpace x:term:arg : term => do
@@ -797,6 +790,13 @@ scoped elab:max "TangentSpace%" ppSpace x:term:arg : term => do
   let extype ← whnf <| ← instantiateMVars <| ← inferType ex
   let src ← findModel extype
   mkAppM ``TangentSpace #[src, ex]
+
+/-- `tangentMap% f` elaborates to `tangentMap I J f`,
+trying to determine `I` and `J` from the local context. -/
+scoped elab:max "tangentMap%" ppSpace f:term:arg : term => do
+  let ef ← ensureIsFunction <|← Term.elabTerm f none
+  let (srcI, tgtI) ← findModels ef none
+  mkAppM ``tangentMap #[srcI, tgtI, ef]
 
 end Manifold
 
