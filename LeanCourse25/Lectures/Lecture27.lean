@@ -209,18 +209,21 @@ but not modify (e.g. the current file name).
 We go through each assumption and look whether the type of the assumption is
 *definitionally equal* to the target. -/
 
-elab "my_assumption" : tactic => do
+elab "my_assumption" : tactic => withMainContext do
   /- `target` is the statement we want to prove -/
   let target ← getMainTarget
-  /- Loop through all hypotheses in the local context -/
+  /- Loop through all hypotheses and variables in the local context -/
   for ldecl in ← getLCtx do
     /- Check for *definitional equality* -/
     if ← isDefEq ldecl.type target then
       /- If you find a match, use that hypothesis to close the goal. -/
       closeMainGoal `my_assumption ldecl.toExpr
-      logInfo m!"found hypothesis {ldecl.toExpr} with type: {indentExpr (← inferType ldecl.toExpr)}"
+      logInfo m!"found hypothesis {ldecl.toExpr} with type: {indentExpr ldecl.type}"
       /- `return` stops executing the rest of the function. -/
       return
+    else
+      logInfo m!"the type of {ldecl.toExpr} is {indentExpr ldecl.type}\n \
+        and doesn't match {indentExpr target}."
   /- If none of the local declarations match, throw an error. -/
   throwTacticEx `my_assumption (← getMainGoal)
     m!"unable to find matching hypothesis of type {indentExpr target}"
@@ -250,7 +253,7 @@ in the context of the current goal.
 We can do this using `withMainContext`, which we need to add. -/
 
 example : ∀ (n m : ℕ) (h1 : 0 ≤ m) (h2 : n = 0) (h3 : m ≤ 9), n = 0 := by
-  intros
+  intro n m h1 h2 h3
   my_assumption
 
 
@@ -266,6 +269,9 @@ example : ∀ (n m : ℕ) (h1 : 0 ≤ m) (h2 : n = 0) (h3 : m ≤ 9), n = 0 := b
 example (a b c d : ℕ) (h : a = b) (h' : c = d) : a + c = b + d := by
   have H := congrArg₂ HAdd.hAdd h h'
   exact H
+
+-- macro "add_eq" eq₁:ident eq₂:ident " with " new:ident : tactic =>
+--   `(tactic|have $new := congrArg₂ HAdd.hAdd $eq₁ $eq₂)
 
 elab "add_eq" eq₁:ident eq₂:ident " with " new:ident : tactic =>
   withMainContext do
@@ -297,7 +303,7 @@ elab_rules : tactic
     let prfStx  ← `(congr (congrArg HAdd.hAdd $eq₁) $eq₂)
     let prf ← elabTerm prfStx none
     let typ ← inferType prf
-    -- we use the name `new`, or make a name ourselves
+    -- we use the name `new`, or make a name (`newEq`) ourselves
     let newName := match new with
     | some ident => ident.getId
     | none => `newEq
@@ -308,7 +314,9 @@ elab_rules : tactic
 
 example (a b c d : ℕ) (h : a = b) (h' : c = d) : a + c = b + d  := by
   add_eq' h h'
-  assumption
+  add_eq' h h'
+  add_eq' h h' with H
+  my_assumption
 
 
 
@@ -322,26 +330,28 @@ we multiply both sides of a hypothesis by a constant -/
 
 example (a b c : ℤ) (hyp : a = b) : c * a = c * b := by
   replace hyp := congr_arg (fun x ↦ c * x) hyp
+  dsimp only at hyp
   exact hyp
 
+#check Location
 elab "mul_left" x:term l:location : tactic =>
   withMainContext do
     match expandLocation l with
     | .targets #[hyp] false => do
-      let hypTerm : Term := ⟨hyp⟩
+      let hypTerm : Term /- TSyntax `term -/ := ⟨hyp⟩
       let prfStx ← `(congr_arg (fun y ↦ $x * y) $hypTerm)
       let prf ← elabTerm prfStx none
       let typ ← inferType prf
       let fvarId ← getFVarId hyp
       let (newFVars, newGoal) ← (← getMainGoal).assertHypotheses
         #[{userName := hyp.getId, type := typ, value := prf}]
-      let newGoal ← newGoal.clear fvarId
-      replaceMainGoal [newGoal]
+      let newGoal2 ← newGoal.clear fvarId
+      replaceMainGoal [newGoal2]
     | _ => throwError "You can use this tactic only at a single hypothesis."
 
 
-example (a b c : ℤ) (hyp : a = b) : c * a = c * b := by
-  mul_left c at hyp
+example (a b c : ℤ) (hyp : a = b) (hyp2 : a + a = b + b) : c * a = c * b := by
+  mul_left c at hyp -- hyp2
   exact hyp
 
 /-
@@ -349,3 +359,8 @@ This just scratches the surface. If you want to learn more,
 you can find more resources here:
 [https://leanprover-community.github.io/learn.html#meta-programming-and-tactic-writing]
 -/
+
+/- In response to a question about universe levels of inductive types. -/
+inductive NaturalNumber'.{u, v} (A : Type v) : Type (u + 1) where
+  | zero : Type → NaturalNumber' A
+  | succ (n : NaturalNumber' A) : NaturalNumber' A
