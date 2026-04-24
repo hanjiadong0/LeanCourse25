@@ -116,6 +116,21 @@ Warning: this could lead to subtle errors, because the live editor might use a s
 * [API documentation for this course](https://florisvandoorn.com/LeanCourse25/docs/)
 * [latest Mathlib API documentation](https://leanprover-community.github.io/mathlib4_docs/)
 
+## AI Tool Hub
+
+This repository now also includes [LeanCourse25/AI-tool/README.md](/c:/Users/Anwender/LEANCOURSE/LeanCourse25/LeanCourse25/AI-tool/README.md:1), a local AI hub for:
+
+* OpenGauss-based Lean workflows
+* external evaluation-bridge scripts for `Science-Work-Flow-`
+* a thesis writing workspace and prompt set
+
+Typical local commands:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\LeanCourse25\AI-tool\scripts\Invoke-AIToolDoctor.ps1
+cmd /c .\LeanCourse25\AI-tool\scripts\OpenGauss-Project.cmd doctor
+```
+
 Some exciting projects using Lean:
 
 * Interesting finished Lean projects: [Liquid Tensor Experiment](https://github.com/leanprover-community/lean-liquid), [Equational Theories project](https://teorth.github.io/equational_theories/), [Carleson's theorem](https://florisvandoorn.com/carleson/).

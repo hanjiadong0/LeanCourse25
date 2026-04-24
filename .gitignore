@@ -42,3 +42,10 @@ docs/_includes/sorries.md
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+LeanCourse25/AI-tool/config/profiles.local.json
+LeanCourse25/AI-tool/external/*
+!LeanCourse25/AI-tool/external/README.md
+LeanCourse25/AI-tool/evaluations/*
+!LeanCourse25/AI-tool/evaluations/README.md
+LeanCourse25/AI-tool/projects/*
+!LeanCourse25/AI-tool/projects/README.md

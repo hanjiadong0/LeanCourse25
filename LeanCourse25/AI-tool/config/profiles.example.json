@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "default_lean_profile": "main",
+  "default_evaluation_profile": "science-work-flow",
+  "lean_profiles": [
+    {
+      "name": "main",
+      "project_path": "C:\\path\\to\\LeanCourse25",
+      "opengauss_runner": "C:\\path\\to\\OpenGauss\\run-gauss.cmd"
+    }
+  ],
+  "evaluation_profiles": [
+    {
+      "name": "science-work-flow",
+      "repo_path": "C:\\path\\to\\Science-Work-Flow-",
+      "python_module": "cambagent_eval"
+    }
+  ],
+  "thesis": {
+    "workspace_path": "C:\\path\\to\\LeanCourse25\\LeanCourse25\\AI-tool\\workspaces\\thesis",
+    "project_path": "C:\\path\\to\\ThesisRepo"
+  },
+  "links": [
+    {
+      "category": "external",
+      "name": "OpenGauss",
+      "target_path": "C:\\path\\to\\OpenGauss"
+    },
+    {
+      "category": "evaluations",
+      "name": "Science-Work-Flow",
+      "target_path": "C:\\path\\to\\Science-Work-Flow-"
+    },
+    {
+      "category": "projects",
+      "name": "Thesis",
+      "target_path": "C:\\path\\to\\ThesisRepo"
+    }
+  ]
+}
