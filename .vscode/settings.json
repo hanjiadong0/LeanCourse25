@@ -40,6 +40,29 @@
     "files.eol": "\n",
     "lean4.infoview.emphasizeFirstGoal": true,
     "lean4.infoview.expectedTypeVisibility": "Collapsed by default",
+    "latex-workshop.latex.tools": [
+      {
+        "name": "pdflatex",
+        "command": "pdflatex",
+        "args": [
+          "-interaction=nonstopmode",
+          "-halt-on-error",
+          "-file-line-error",
+          "%DOC%"
+        ]
+      }
+    ],
+    "latex-workshop.latex.recipes": [
+      {
+        "name": "pdflatex x2",
+        "tools": [
+          "pdflatex",
+          "pdflatex"
+        ]
+      }
+    ],
+    "latex-workshop.latex.recipe.default": "first",
+    "latex-workshop.latex.autoBuild.run": "never",
     "files.readonlyInclude": {
       "**/.elan/**": true,
       "**/.lake/**": true

@@ -128,7 +128,6 @@ def Statement3 : Prop :=
 
 
 
-
 /- Nat.Prime is a predicate on natural numbers, so it has type `ℕ → Prop`. -/
 
 #check (Nat.Prime)

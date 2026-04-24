@@ -1,0 +1,294 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\title{Project Report: Iwasawa Decomposition for \texorpdfstring{$GL(n,\mathbb{R})$}{GL(n,R)} in Lean 4}
+\author{LeanCourse25 Project}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This project develops a matrix-level Lean 4 framework for the Iwasawa decomposition of
+$GL(n,\mathbb{R})$, inspired by Goldfeld's presentation.
+The current code formalizes core triangular-matrix infrastructure, a generalized upper-half-space model,
+and an API for Iwasawa factorization. The main engineering focus is a clean separation between
+foundational lemmas, constructive solver interfaces, and high-level decomposition statements.
+\end{abstract}
+
+\section{Goal and Scope}
+The target mathematical statement is the decomposition
+\[
+g = zkd, \qquad g \in GL(n,\mathbb{R}),
+\]
+with:
+\begin{itemize}[leftmargin=1.5em]
+\item $z$ in a generalized upper-half-space model $H_n$,
+\item $k$ orthogonal,
+\item $d$ central scalar (unit in $\mathbb{R}$).
+\end{itemize}
+The formalization is implemented in
+\texttt{LeanCourse25/Projects/Iwasawa.lean}.
+
+\section{Code Organization}
+The file is structured into modules:
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{Core predicates}: triangular, diagonal, unipotent, diagonal/scalar constructors.
+\item \textbf{Triangular lemmas}: closure under addition and multiplication.
+\item \textbf{Proof tools}: entrywise extensionality and helper lemmas.
+\item \textbf{GL layer}: matrix and invertible-matrix wrappers over $\mathbb{R}$.
+\item \textbf{Triangular solver API}: data types and specification for constructive elimination.
+\item \textbf{$H_n$ model}: upper-unipotent times normalized positive diagonal.
+\item \textbf{Iwasawa API}: factorization record, existence typeclass, quotient target.
+\end{itemize}
+
+\section{Architecture Overview (6 Layers)}
+The current file follows a strict layered architecture:
+\[
+\text{Layer 1} \rightarrow \text{Layer 2} \rightarrow \text{Layer 3} \rightarrow
+\text{Layer 4} \rightarrow \text{Layer 5} \rightarrow \text{Layer 6}.
+\]
+
+\begin{enumerate}[leftmargin=1.5em]
+\item \textbf{Layer 1 (L48--262): Matrix predicates and types.}\\
+Definitions of \texttt{IsUpperTriangular}, \texttt{IsUpperUnipotent},
+\texttt{IsDiagonal}, \texttt{IsOrthogonal}, \texttt{Mat m}, \texttt{GLn m}.
+\item \textbf{Layer 2 (L276--714): Triangular solver algorithm.}\\
+Algorithmic elimination core:
+base case \texttt{solve2\_kill01}, Schur recursion (\texttt{SchurStep}),
+and dimension-indexed solver family (\texttt{RecursiveSolveRight}).
+\item \textbf{Layer 3 (L748--836): Generalized upper half-plane \texttt{Hn.H m}.}\\
+Data model \(z=(x,y)\) with upper-unipotent \(x\), normalized positive diagonal \(y\),
+and matrix realization \(\texttt{z.toMat = x * diag(y)}\).
+\item \textbf{Layer 4 (L848--901): Factorization data type.}\\
+\texttt{IwasawaFactorization} stores \((z,k,d)\) with
+\(\texttt{toMat} = z * k * d \cdot I\).
+\item \textbf{Layer 5 (L891--1487): Concrete pipeline machinery.}\\
+Connects solver outputs to factorization data via
+\texttt{ConcretePipeline}, \texttt{FromTriangularSolver}, and \texttt{ConstructiveCore}.
+\item \textbf{Layer 6 (L1490--2230): Theorems and \(GL(n,\mathbb{Z})\)-action.}\\
+Global existence packaging, uniqueness, quotient equivalence, arithmetic group action,
+and Siegel-set statement.
+\end{enumerate}
+
+\subsection*{Layer 6 Status Table}
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Theorem} & \textbf{Line} & \textbf{Status} \\
+\hline
+\texttt{unique\_z\_of\_two\_factorizations} & L1790 & DONE \\
+\texttt{Hn\_equiv\_quotient} & L2044 & DONE \\
+\texttt{GLZ\_mulAction\_Hn} & L2252 & DONE \\
+\texttt{siegel\_fundamental\_domain} & L2279 & \texttt{sorry} \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Core Formal Definitions}
+For $N = \mathrm{Fin}\;m$, the project defines:
+\begin{itemize}[leftmargin=1.5em]
+\item \texttt{IsUpperTriangular}, \texttt{IsLowerTriangular}, \texttt{IsDiagonal},
+\item \texttt{IsUpperUnipotent}, \texttt{IsLowerUnipotent},
+\item \texttt{diag : (N -> alpha) -> Matrix N N alpha},
+\item \texttt{scalarMat : alpha -> Matrix N N alpha}.
+\end{itemize}
+These abstractions provide a uniform basis for all later constructions.
+
+\section{Key Proved Lemmas}
+The file includes reusable structural lemmas:
+\begin{itemize}[leftmargin=1.5em]
+\item \texttt{upper\_add}, \texttt{lower\_add},
+\item \texttt{upper\_mul}, \texttt{lower\_mul},
+\item \texttt{diagonal\_upper}, \texttt{diagonal\_lower},
+\item \texttt{upper\_eq\_lower\_implies\_diagonal}.
+\end{itemize}
+These are the main proof-theoretic building blocks for uniqueness arguments and elimination workflows.
+
+\section{Constructive Solver Layer}
+In namespace \texttt{TriangularSolver}, the code introduces:
+\begin{itemize}[leftmargin=1.5em]
+\item \texttt{UpperUnipotent} as a structure carrying both data and proofs,
+\item \texttt{SolveRightSpec} as a solver contract for equations of the form $U A = B$,
+\item completeness formalization \texttt{SolveRightSpec.Complete} and impossibility result \texttt{not\_complete},
+\item concrete $2\times 2$ lemmas \texttt{solve2\_kill01}, \texttt{solve2\_upperUnipotent}, \texttt{solve2\_lowering\_data},
+\item a field-level solver \texttt{solveRight2Field} and its real specialization \texttt{solveRight2Real},
+\item recursive infrastructure \texttt{SchurStep}, \texttt{stepOfSchur}, \texttt{recursiveSolveRightOfSchur}, and \texttt{RecursiveSolveRight}.
+\end{itemize}
+This design isolates computational elimination from downstream decomposition logic.
+
+\section{Generalized Upper Half-Space \texorpdfstring{$H_n$}{Hn}}
+The file models $H_n$ as structured data:
+\[
+z = x y,
+\]
+where:
+\begin{itemize}[leftmargin=1.5em]
+\item $x$ is upper-unipotent (\texttt{Hn.UpperUnipotent}),
+\item $y$ is normalized positive diagonal (\texttt{Hn.PosDiagNorm}).
+\end{itemize}
+The map \texttt{Hn.H.toMat} gives the underlying matrix representation.
+
+\section{Iwasawa API}
+The final API layer defines:
+\begin{itemize}[leftmargin=1.5em]
+\item \texttt{IwasawaFactorization} with fields $(z,k,d)$,
+\item \texttt{ConcretePipeline} (algorithmic data: \texttt{xOf}, \texttt{yOf}, \texttt{qOf}, \texttt{dOf}, \texttt{correct}),
+\item bridge layers \texttt{FromTriangularSolver} and \texttt{ConstructiveCore},
+\item \texttt{HasIwasawa} (typeclass) and immediate theorem \texttt{exists\_factorization},
+\item uniqueness theorem \texttt{unique\_z\_of\_two\_factorizations},
+\item quotient objects \texttt{OZ\_subgroup}, \texttt{Hquot}, \texttt{Hn\_equiv\_quotient}.
+\end{itemize}
+This makes downstream usage independent of the eventual constructive proof of the instance.
+
+\subsection*{Core Contract: \texttt{HasIwasawa}}
+The central abstraction is:
+\begin{itemize}[leftmargin=1.5em]
+\item a constructor
+\[
+\texttt{iwasawa : GLn m -> IwasawaFactorization m},
+\]
+which assigns factors $(z,k,d)$ to each invertible matrix $g$;
+\item a correctness theorem
+\[
+\texttt{correct : }\forall g,\; (\texttt{iwasawa}\;g).\texttt{toMat} = g.
+\]
+\end{itemize}
+
+So \texttt{HasIwasawa} is exactly ``existence + reconstruction correctness''.
+All downstream theorems can depend on this interface without committing to a specific algorithm.
+
+\subsection*{Why \texttt{exists\_factorization} is immediate}
+The proof
+\[
+\texttt{theorem exists\_factorization [HasIwasawa m] (g : GLn m) :}
+\]
+\[
+\texttt{  exists fac, fac.toMat = g}
+\]
+is one-step logical unpacking of the class fields:
+\begin{enumerate}[leftmargin=1.5em]
+\item choose the witness
+\[
+\texttt{fac := HasIwasawa.iwasawa g};
+\]
+\item remaining goal is exactly
+\[
+\texttt{fac.toMat = g},
+\]
+which is \texttt{HasIwasawa.correct g};
+\item \texttt{simpa} finishes after unfolding the chosen witness.
+\end{enumerate}
+In short, the theorem is a canonical projection from the typeclass data.
+\subsection*{Full Construction Pipeline (Exact Code Path)}
+Below is the concrete path in your code from input \(g\) to the data used by
+\texttt{HasIwasawa}.
+\begin{enumerate}[leftmargin=1.5em]
+\item \textbf{Input.}
+Start from
+\[
+g : \texttt{GLn m}.
+\]
+Target:
+\[
+\texttt{fac : IwasawaFactorization m}
+\]
+\item \textbf{Base elimination at dimension 2.}
+Use \texttt{solve2\_kill01} to kill entry \((0,1)\), then package as
+\texttt{UpperUnipotent} via \texttt{solve2\_upperUnipotent}, and package
+\(B=U*A\) via \texttt{solve2\_lowering\_data}. This yields the concrete base
+\texttt{solveRight2Field} and \texttt{solveRight2Real}.
+
+\item \textbf{Recursive solver family.}
+Provide Schur-step data \texttt{SchurStep} and build higher-dimensional solvers
+with \texttt{stepOfSchur} and \texttt{recursiveSolveRightOfSchur}, giving
+\texttt{RecursiveSolveRight}.
+
+\item \textbf{Algorithmic factor data at fixed dimension.}
+Use \texttt{ConcretePipeline m}, whose fields are exactly the data production
+functions:
+\texttt{xOf}, \texttt{yOf}, \texttt{qOf}, \texttt{qOrth}, \texttt{dOf},
+plus a reconstruction proof \texttt{correct}.
+
+\item \textbf{Package factors.}
+From any pipeline \texttt{P : ConcretePipeline m} and \(g\):
+\begin{itemize}[leftmargin=1.5em]
+\item \texttt{zOf P g : Hn.H m},
+\item \texttt{facOf P g : IwasawaFactorization m},
+\item \texttt{facOf\_correct P g : (facOf P g).toMat = g}.
+\end{itemize}
+This already gives \texttt{exists\_factorization\_of\_pipeline}.
+
+\item \textbf{Dimension recursion for pipelines.}
+Use \texttt{RecursiveMkPipeline} and \texttt{RecursiveConcretePipeline} to get
+pipelines at arbitrary dimensions \(m \ge 2\), with theorem
+\texttt{RecursiveConcretePipeline.exists\_factorization\_ge2}.
+
+\item \textbf{Bridge from solver recursion to pipeline recursion.}
+Use \texttt{FromTriangularSolver} (fields: \texttt{solver}, \texttt{mkPipeline}),
+or equivalently raw witness packaging via \texttt{RawMkPipeline}.
+This yields theorems
+\texttt{exists\_raw\_ge2}, \texttt{exists\_factorization\_ge2},
+and \texttt{Fact}-versions.
+
+\item \textbf{Single constructive package.}
+Bundle everything into
+\[
+\texttt{ConstructiveCore := \{ solverBase, solverSchur, pipelineBuilder \}}.
+\]
+Then derive:
+\texttt{solverRec}, \texttt{bridge},
+\texttt{exists\_factorization\_fact}, and \texttt{toHasIwasawaFact}.
+
+\item \textbf{Typeclass extraction.}
+At this point, obtain
+\[
+\texttt{HasIwasawa m}
+\]
+via \texttt{ConcretePipeline.toHasIwasawa},
+\texttt{FromTriangularSolver.toHasIwasawaFact}, or
+\texttt{ConstructiveCore.toHasIwasawaFact}.
+With a registered global core (\texttt{HasConstructiveCore}), the instance
+\texttt{hasIwasawaFact} is automatic.
+
+\item \textbf{Final theorem as projection.}
+Once \([\texttt{HasIwasawa m}]\) is available, the theorem
+\texttt{exists\_factorization} is immediate by taking witness
+\texttt{HasIwasawa.iwasawa g} and applying \texttt{HasIwasawa.correct g}.
+\end{enumerate}
+
+\noindent
+Notation map used in this report:
+\[
+(U,M,D)\ \longrightarrow\ (x,y,d)\ \longrightarrow\ (z,k,d),
+\]
+where \(z=(x,y)\) is exactly the \texttt{Hn.H}-object stored in
+\texttt{IwasawaFactorization}.
+
+\section{Current Status and Remaining Tasks}
+The infrastructure and API are in place and compile.
+Major completed milestones now include:
+\begin{itemize}[leftmargin=1.5em]
+\item constructive base solver and recursive solver framework (\texttt{TriangularSolver}),
+\item concrete and recursive pipeline packaging (\texttt{ConcretePipeline}, \texttt{ConstructiveCore}),
+\item uniqueness of the \(z\)-factor (\texttt{unique\_z\_of\_two\_factorizations}),
+\item quotient construction and equivalence map (\texttt{OZ\_subgroup}, \texttt{Hquot}, \texttt{Hn\_equiv\_quotient}).
+\end{itemize}
+At the moment, the remaining unfinished theorem in this file is:
+\begin{itemize}[leftmargin=1.5em]
+\item \texttt{siegel\_fundamental\_domain} (currently marked with \texttt{sorry}).
+\end{itemize}
+
+\section{Conclusion}
+This project establishes a strong formal skeleton for Iwasawa decomposition in Lean 4:
+core matrix algebra, triangular proof infrastructure, a solver interface, and a scalable API.
+The architecture is suitable for extending from specification-level statements to full constructive proofs.
+
+\section*{Reference}
+D. Goldfeld, \emph{Automorphic Forms and L-Functions for the Group GL(n, R)},
+Cambridge Studies in Advanced Mathematics, vol.~99, 2006.
+
+\end{document}

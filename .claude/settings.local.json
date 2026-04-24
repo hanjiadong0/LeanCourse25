@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(git clone:*)",
+      "Bash(ls:*)",
+      "Bash(git pull:*)",
+      "Bash(gh pr list:*)",
+      "Bash(git checkout:*)",
+      "Bash(echo:*)",
+      "Bash(git update-index:*)",
+      "Bash(git hash-object:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAddress review: clean imports, doc comment, translate, formatting\n\n- Remove redundant Mathlib imports \\(covered by ProblemImports\\)\n- Use doc comment `/--` with LaTeX backtick notation\n- Translate German comment to English\n- Remove extra blank line before abbrev SL4\n- Move `by` to same line as `:=`\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(where:*)",
+      "Bash(lake env:*)",
+      "Bash(find:*)",
+      "Bash(del \"c:\\\\Users\\\\Anwender\\\\LEANCOURSE\\\\LeanCourse25\\\\split_iwasawa.py\")",
+      "Bash(lake build:*)",
+      "Bash(timeout 10 grep:*)"
+    ]
+  }
+}
