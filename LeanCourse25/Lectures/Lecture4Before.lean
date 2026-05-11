@@ -65,9 +65,13 @@ that follow from linear combinations of assumptions.
 -/
 
 -- Let's remember how to work with negation.
-example {p q : Prop} (h : p → q) : ¬q → ¬ p := by
-  sorry
-  done
+example {p q : Prop} (h : p → q) : ¬q → ¬p := by
+  intro hnq hp
+  have hq := h hp
+  contradiction
+
+
+
 
 /- # Today: classical reasoning, equality of functions; finding lemmas; working with orders -/
 
@@ -83,9 +87,9 @@ using the following tactics.
 -/
 example (p q : Prop) (h : ¬q → ¬p) : p → q := by
   intro hp
-  by_contra hq
-  have:= h hq
-  apply h hq hp 
+  by_contra hnq
+  apply h hnq
+  exact hp
   done
 
 example (p r : Prop) (h1 : p → r) (h2 : ¬ p → r) : r := by
@@ -111,15 +115,15 @@ we need to use `by_contra` to begin a proof by contradiction.
 /- The `contrapose` tactic starts a proof by contraposition -/
 example (p q : Prop) (h : ¬q → ¬p) : p → q := by
   contrapose
-  assumption 
+  assumption
   done
 
 -- Exercise: prove this by contraposition.
 example : 2 ≠ 4 → 1 ≠ 2 := by
   contrapose!
-  intro h 
+  intro h
   linarith
-  done 
+  done
 
 -- Final remark: the `use` tactic is compatible with constructive logic.
 
@@ -132,7 +136,7 @@ def SequentialLimit (u : ℕ → ℝ) (l : ℝ) : Prop :=
 example (u : ℕ → ℝ) (l : ℝ) : ¬ SequentialLimit u l ↔
     ∃ ε > 0, ∀ N, ∃ n ≥ N, |u n - l| ≥ ε := by
   unfold SequentialLimit
-  push_neg  
+  push_neg
   rfl
   done
 
@@ -140,24 +144,24 @@ lemma sequentialLimit_unique (u : ℕ → ℝ) (l l' : ℝ) :
     SequentialLimit u l → SequentialLimit u l' → l = l' := by
   intro hl hl'
   by_contra H
-  have : 0 < |l - l'| := by 
+  have : 0 < |l - l'| := by
     exact abs_pos.mpr (sub_ne_zero.mpr H)
   specialize hl (|l - l'| / 2) (by linarith)
   specialize hl' (|l - l'| / 2) (by linarith)
   obtain ⟨N, hN⟩ := hl
-  obtain ⟨N', hN'⟩ := hl' 
+  obtain ⟨N', hN'⟩ := hl'
   let N₀ := max N N'
   have h1 : N₀ ≥ N := by apply le_max_left
   have h2 : N₀ ≥ N' := by apply le_max_right
   specialize hN N₀ h1
-  specialize hN' N₀ h2   
-  have key : |l - l'| < |l - l'| := calc 
+  specialize hN' N₀ h2
+  have key : |l - l'| < |l - l'| := calc
       |l - l'| = |u N₀ - l + (l' - u N₀)| := by sorry
       _ ≤ |u N₀ - l| + |l' - u N₀| := by sorry
       _ < |l - l'| / 2 + |l - l'| / 2 := by sorry
       _ = |l - l'| := by ring
-  linarith    
-  done  
+  linarith
+  done
 
 
 lemma sequentialLimit_unique1 (u : ℕ → ℝ) (l l' : ℝ) :
@@ -186,11 +190,11 @@ lemma sequentialLimit_unique1 (u : ℕ → ℝ) (l l' : ℝ) :
   have key : |l - l'| < |l - l'| := by
     calc
       |l - l'|
-          = |(l - u N₀) + (u N₀ - l')| := by ring
+          = |(l - u N₀) + (u N₀ - l')| := by ring_nf
       _ ≤ |l - u N₀| + |u N₀ - l'| := by
             simpa using abs_add_le (l - u N₀) (u N₀ - l')
       _ < |l - l'| / 2 + |l - l'| / 2 := by
-            have : |u N₀ - l'| = |l' - u N₀| := by simpa [abs_sub_comm]
+            have : |u N₀ - l'| = |l' - u N₀| := by simp [abs_sub_comm]
             exact add_lt_add_of_lt_of_lt hA (by simpa [this] using hB)
       _ = |l - l'| := by linarith
   exact (lt_irrefl (|l - l'|)) key
@@ -245,11 +249,11 @@ def g : ZMod 5 → ZMod 5 := fun x ↦ x
 
 -- Are f and g always equal? Yes! Let's prove it.
 example : f = g := by
-  ext x 
+  ext x
   unfold f g
   have: x= 0 ∨ x = 1 ∨ x = 2 ∨ x = 3 ∨ x = 4 := by
     fin_cases x <;> simp
-  obtain (rfl | rfl | rfl | rfl | rfl) := this <;> rfl 
+  obtain (rfl | rfl | rfl | rfl | rfl) := this <;> rfl
   done
 
 
@@ -336,7 +340,7 @@ You can often find similar theorems nearby the theorem you searched for.
 
 example (a b x y : ℝ) (h : a < b) (h2 : x ≤ y) : a + exp x < b + exp y := by
   refine add_lt_add_of_lt_of_le h ?_
-  exact exp_le_exp.mpr h2 
+  exact exp_le_exp.mpr h2
   done
 
 

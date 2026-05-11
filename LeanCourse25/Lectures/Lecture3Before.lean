@@ -52,7 +52,11 @@ variable (f g : ℝ → ℝ)
 #check (continuous_sin : Continuous (fun x : ℝ ↦ sin x))
 
 example : Continuous (fun x ↦ x + x * Real.sin x) := by
-  sorry
+  apply Continuous.add
+  · apply continuous_id
+  · apply Continuous.mul
+    · apply continuous_id
+    · apply continuous_sin
   done
 
 /- # Today: logic (if and only if, and, exists and negation) -/
@@ -75,20 +79,24 @@ example : Continuous (fun x ↦ x + x * Real.sin x) := by
 
 
 example (h : a ≤ b) : exp a ≤ exp b := by
-  sorry
+  apply exp_le_exp.2
+  exact h
   done
 
 
 
 example (h : exp a ≤ exp b) : a ≤ b := by
-  sorry
+  apply exp_le_exp.1
+  exact h
   done
 
 
 
 
 example {p q : Prop} (h1 : p → q) (h2 : q → p) : p ↔ q := by
-  sorry
+  constructor
+  · apply h1
+  · apply h2
   done
 
 
@@ -106,9 +114,12 @@ def Injective (f : ℝ → ℝ) : Prop := ∀ x y : ℝ, f x = f y → x = y
 
 example (f g : ℝ → ℝ) (hg : Injective g) (hf : Injective f) :
     Injective (g ∘ f) := by
-  sorry
+  intro x y h
+  simp at h
+  apply hf
+  apply hg
+  exact h
   done
-
 
 
 
@@ -130,7 +141,13 @@ Furthermore, we can decompose conjunction and equivalences.
 -/
 
 example (p q r s : Prop) (h : p → r) (h' : q → s) : p ∧ q → r ∧ s := by
-  sorry
+  intro hpq
+  obtain ⟨hp, hq⟩ := hpq
+  constructor
+  · apply h
+    exact hp
+  · apply h'
+    exact hq
   done
 
 /- ## Existential quantifiers -/
@@ -212,7 +229,7 @@ example : a = a * b → a = 0 ∨ b = 1 := by
   · left
     exact ha
   · right
-    linarith    
+    linarith
   done
 
 
@@ -224,10 +241,10 @@ example (f : ℝ → ℝ) (hf : StrictMono f) : Injective f := by
     exact lt_trichotomy x y
   obtain hlt | heq | hgt := h
   · have : f x < f y := hf hlt
-    linarith  
+    linarith
   · exact heq
   · have : f y < f x := hf hgt
-    linarith  
+    linarith
   done
 
 /- ## Negation
@@ -239,7 +256,7 @@ We can use the same tactics as for implication:
 
 example {p : Prop} (h : p) : ¬ ¬ p := by
   intro hp
-  apply hp 
+  apply hp
   exact h
   done
 

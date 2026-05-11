@@ -273,6 +273,7 @@ example {p : Prop} (h : p) : ¬ ¬ p := by
   apply hp h
   done
 
+
 example {α : Type*} {p : α → Prop} : ¬ (∃ x, p x) ↔ ∀ x, ¬ p x := by
   constructor
   · intro h x hx

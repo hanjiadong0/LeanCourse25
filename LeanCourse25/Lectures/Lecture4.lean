@@ -142,23 +142,60 @@ lemma sequentialLimit_unique (u : ℕ → ℝ) (l l' : ℝ) :
     SequentialLimit u l → SequentialLimit u l' → l = l' := by
   intro hl hl'
   by_contra H
-  have h : 0 < |l - l'| := by sorry
+  have h : 0 < |l - l'| := by exact abs_sub_pos.mpr H
   specialize hl (|l - l'| / 2) (by linarith)
   specialize hl' (|l - l'| / 2) (by linarith)
   obtain ⟨N, hN⟩ := hl
   obtain ⟨N', hN'⟩ := hl'
   let N₀ := max N N'
-  have h1 : N₀ ≥ N := by sorry
-  have h2 : N₀ ≥ N' := by sorry
+  have h1 : N₀ ≥ N := by exact Nat.le_max_left N N'
+  have h2 : N₀ ≥ N' := by exact Nat.le_max_right N N'
   specialize hN N₀ h1
   specialize hN' N₀ h2
   have key : |l - l'| < |l - l'| := calc |l - l'|
       _ = |l - u N₀ + (u N₀ - l')| := by ring_nf
-      _ ≤ |l - u N₀| + |u N₀ - l'| := by apply?
-      _ = |u N₀ - l| + |u N₀ - l'| := by rw?
+      _ ≤ |l - u N₀| + |u N₀ - l'| := by exact abs_add_le (l - u N₀) (u N₀ - l')
+      _ = |u N₀ - l| + |u N₀ - l'| := by rw [@abs_sub_comm]
       _ < |l - l'| := by linarith
   linarith
   done
+
+lemma sequentialLimit_unique2(u : Nat -> Real) (l l' : Real) :
+    SequentialLimit u l -> SequentialLimit u l' -> l = l' := by
+  intro hl hl'
+  by_contra hne
+  have hdist : |l - l'| > 0 := abs_pos.mpr (sub_ne_zero.mpr hne)
+  let eps : Real := |l - l'| / 2
+  have heps : eps > 0 := by
+    dsimp [eps]
+    linarith
+  obtain ⟨N, hN⟩ := hl eps heps
+  obtain ⟨N', hN'⟩ := hl' eps heps
+  let n : Nat := max N N'
+  have hnN : n >= N := by
+    dsimp [n]
+    exact le_max_left N N'
+  have hnN' : n >= N' := by
+    dsimp [n]
+    exact le_max_right N N'
+  have h1 : |u n - l| < eps := hN n hnN
+  have h2 : |u n - l'| < eps := hN' n hnN'
+  have hdecomp : l - l' = (l - u n) + (u n - l') := by ring
+  have habs : |l - l'| ≤ |l - u n| + |u n - l'| := by
+    calc
+      |l - l'| = |(l - u n) + (u n - l')| := by rw [hdecomp]
+      _ ≤ |l - u n| + |u n - l'| := abs_add_le _ _
+  have h1' : |l - u n| < eps := by
+    simpa [abs_sub_comm] using h1
+  have hsum : |l - u n| + |u n - l'| < eps + eps := add_lt_add h1' h2
+  have hlt : |l - l'| < |l - l'| := by
+    calc
+      |l - l'| ≤ |l - u n| + |u n - l'| := habs
+      _ < eps + eps := hsum
+      _ = |l - l'| := by
+        dsimp [eps]
+        ring
+  exact lt_irrefl _ hlt
 
 
 /- ## Proving two functions are equal
@@ -221,21 +258,6 @@ example : f = g := by
     fin_cases x <;> simp
   obtain (h | h | h | h | h) := this <;> rw [h] <;> rfl
   done
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /-
@@ -332,7 +354,7 @@ The difference will be discussed later. -/
 
 -- Skipped during class.
 example {G : Type*} [Group G] (a : G) : a * a⁻¹ = 1 := by
-  sorry
+  rw [@mul_inv_eq_one]
   done
 
 -- Let's compare `rw?` and `rw??` on a more complicated example.
@@ -350,8 +372,9 @@ example {G : Type*} [Group G] (a : G) : a⁻¹ * a * a * a⁻¹ = 1 := by
 -- You can also use `rw??` at a hypothesis: simply select a local hypothesis in the infoview.
 example {G : Type*} [Group G] {a b : G} (h : a⁻¹ * a * a * a⁻¹ = b) : b = 1 := by
   rw [inv_mul_cancel a] at h
-  sorry -- Rest is exercise for you.
-  done
+  rw [one_mul a] at h
+  rw [mul_inv_cancel a] at h
+  rw [h]
 
 lemma sequentialLimit_unique' (u : ℕ → ℝ) (l l' : ℝ) :
     SequentialLimit u l → SequentialLimit u l' → l = l' := by

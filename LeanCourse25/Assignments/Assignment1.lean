@@ -350,16 +350,16 @@ variable (a b c x : ℝ)
 #check (sub_self a      : a - a = 0)
 #check (add_zero a      : a + 0 = a)
 #check (zero_add a      : 0 + a = a)
+#check (add_sub_add_right_eq_sub)
 
 example : (a + b) * (a - b) = a^2 - b^2 := by
-  rw[mul_sub (a + b) a b]
-  rw [add_mul a b a, add_mul a b b]
-  rw [mul_comm a b]
-  rw [← sub_sub (a*a + b*a) (b*a) (b*b)]
-  rw [← add_sub (a*a) (b*a) (b*a)]
-  rw [sub_self (b*a)]
-  rw [add_zero (a*a)]
   rw [pow_two a, pow_two b]
+  rw [mul_sub]
+  rw [add_mul]
+  rw [add_mul]
+  rw [mul_comm b a]
+  rw [add_comm (a*b) (b*b)]
+  rw [add_sub_add_right_eq_sub]
   done
 
 
